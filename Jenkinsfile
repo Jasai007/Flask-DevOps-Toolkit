@@ -1,14 +1,12 @@
 pipeline {
-  agent none
+  agent {
+    docker { image 'node:16-alpine' }
+  }
   stages {
-    stage('Back-end') {
-      agent {
-        docker { image 'python:3.9-slim' }
-      }
+    stage('Test') {
       steps {
-        sh 'python --version'
+        sh 'node --version'
       }
     }
-  
   }
 }

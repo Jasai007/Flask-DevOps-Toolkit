@@ -4,7 +4,7 @@ A web app built with Flask, providing tools and features for automating DevOps p
 
 ## Installation Instructions
 
-1. Clone the repository:
+1. Clone the repository
    ```bash
    git clone https://github.com/yourusername/flask-devops-toolkit.git
    cd flask-devops-toolkit

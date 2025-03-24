@@ -23,7 +23,7 @@ class FlaskAppTests(unittest.TestCase):
     def test_index(self):
         response = self.app.get('/')
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Gone page.', response.data)
+        self.assertIn(b'Home page.', response.data)
 
     def test_index_html(self):
         response = self.app.get('/index.html')

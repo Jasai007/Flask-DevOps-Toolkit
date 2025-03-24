@@ -22,4 +22,4 @@ ENV FLASK_RUN_PORT=80
 EXPOSE 80
 
 # Run the application
-ENTRYPOINT ["python", "routes.py"]
+CMD ["python", "routes.py"]

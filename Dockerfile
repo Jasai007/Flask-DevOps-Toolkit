@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 80
 
 # Define the command to run the application
-CMD ["python", "routes.py"]
+CMD ["flask", "run", "--host=0.0.0.0", "--port=80"]

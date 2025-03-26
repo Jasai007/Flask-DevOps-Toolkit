@@ -1,3 +1,6 @@
+
+![Screenshot 2025-03-25 031549](https://github.com/user-attachments/assets/073628aa-c132-4c61-9da8-401f1745c5bf)
+
 # Jenkins Freestyle Project
 
 This repository contains a Jenkins Freestyle project designed to streamline your CI/CD workflows, implemented in AWS.

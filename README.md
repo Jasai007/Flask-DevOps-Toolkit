@@ -29,3 +29,11 @@ Make sure to set the `FLASK_APP` environment variable to the main application fi
 - AWS deployment management tools.
 - User-friendly interface for managing DevOps tasks.
 
+## Project Structure
+
+- `templates/`: Contains HTML templates for rendering views.
+- `static/`: Contains static files such as CSS and images.
+- `routes.py`: Defines the application routes.
+- `test.py`: Contains tests for the application.
+- `Dockerfile`: Instructions for building a Docker image for the application.
+

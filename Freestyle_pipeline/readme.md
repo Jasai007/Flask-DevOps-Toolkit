@@ -19,6 +19,6 @@ In this project, you will find a comprehensive guide on setting up a Jenkins Fre
 
 Automating your CI/CD process with Jenkins enhances productivity and reduces manual tasks. 
 
-For a detailed walkthrough, please visit my blog: [Streamline Your CI/CD Workflow: Building a Simple Jenkins Freestyle Pipeline](https://jasaiblogs.hashnode.dev/streamline-your-cicd-workflow-building-a-simple-jenkins-freestyle-pipeline).
+For Step-by-step guide, please visit my blog: [Streamline Your CI/CD Workflow: Building a Simple Jenkins Freestyle Pipeline](https://jasaiblogs.hashnode.dev/streamline-your-cicd-workflow-building-a-simple-jenkins-freestyle-pipeline).
 
 Feel free to explore the repository and implement your own Jenkins Freestyle projects!

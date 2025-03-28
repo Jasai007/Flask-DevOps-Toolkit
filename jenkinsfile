@@ -1,39 +1,41 @@
 pipeline {
-  agent {
-    docker {
-      image 'python:3.9-slim'
-    }
-  }
-  stages {
-    stage('Checkout Code') {
-      steps {
-        git 'https://github.com/username/python-app.git'
-      }
-    }
-    stage('Install Dependencies') {
-      steps {
-        sh 'pip install -r requirements.txt'
-      }
-    }
-    stage('Run Tests') {
-      steps {
-        sh 'pytest tests/'  // Assumes you have tests written using pytest
-      }
-    }
-    stage('Build Docker Image') {
-      steps {
-        sh 'docker build -t python-app .'
-      }
-    }
-    stage('Deploy to EC2') {
-      steps {
-        sshagent(['your-ssh-credential-id']) {
-          sh '''
-            scp -o StrictHostKeyChecking=no docker-compose.yml ec2-user@<EC2-IP-ADDRESS>:/home/ec2-user/
-            ssh -o StrictHostKeyChecking=no ec2-user@<EC2-IP-ADDRESS> "docker-compose up -d"
-          '''
+    agent any
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git 'https://github.com/Jasai007/Flask-DevOps-Toolkit.git'
+            }
         }
-      }
+        stage('Install Dependencies and Run Tests') {
+            steps {
+                sh '''
+                    if ! pip show -r requirements.txt; then
+                        pip install -r requirements.txt
+                    else
+                        echo "Dependencies already installed."
+                    fi
+                    python -m unittest -v test.py  // Run Python unittest cases
+                '''
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t docimg .'
+            }
+        }
+        stage('Deploy application') {
+            steps {
+                sh '''
+                    # Stop and remove previous container
+                    docker stop pipelineContainer || true
+                    docker rm pipelineContainer || true
+                    
+                    # Run new container
+                    docker run -d -p 80:80 --name pipelineContainer docimg
+                    echo "Deploying application..."
+                '''
+            }
+        }
     }
-  }
 }

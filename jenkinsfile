@@ -28,7 +28,7 @@ pipeline {
                     pip install --no-cache-dir -r requirements.txt
                     
                     # Run unit tests
-                    python -m unittest discover -s tests -p "*.py"
+                    python -m unittest discover -s test -p "*.py"
                 '''
             }
         }

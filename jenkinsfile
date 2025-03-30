@@ -2,6 +2,7 @@ pipeline {
     agent {
         docker {
             image 'python:3.8'
+            args '--user=root' // Run as root to avoid permission issues
         }
     }
 
@@ -11,22 +12,22 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/Jasai007/Flask-DevOps-Toolkit.git'
             }
         }
-        
+
         stage('Install Dependencies and Run Tests') {
             steps {
                 sh '''
                     # Upgrade pip
                     python -m pip install --upgrade pip
                     
-                    # Install dependencies
-                    pip install --user -r requirements.txt
+                    # Install dependencies without cache (to avoid permission issues)
+                    pip install --no-cache-dir -r requirements.txt
                     
                     # Run unit tests
                     python -m unittest discover -s tests -p "*.py"
                 '''
             }
         }
-        
+
         stage('Build Docker Image') {
             steps {
                 sh 'docker build -t docimg .'

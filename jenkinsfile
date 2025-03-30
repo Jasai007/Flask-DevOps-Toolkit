@@ -36,7 +36,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh '''
-                    docker build -t $IMAGE_NAME .
+                    docker build -t $IMAGE_NAME:${BUILD_NUMBER} . 
+
                 '''
             }
         }
@@ -49,7 +50,8 @@ pipeline {
                     docker rm $APP_NAME || true
                     
                     # Run the new container
-                    docker run -d -p 80:80 --name $APP_NAME $IMAGE_NAME
+                    docker run -d -p 80:80 --name $APP_NAME $IMAGE_NAME:${BUILD_NUMBER}
+
                     echo "Application Deployed Successfully!"
                 '''
             }

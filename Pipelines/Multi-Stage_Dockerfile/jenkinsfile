@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'docker-agent' }
+    agent { label 'DockerAgent' }
 
     environment {
         IMAGE_NAME = "dockerimg"

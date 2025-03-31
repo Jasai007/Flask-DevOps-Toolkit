@@ -1,0 +1,41 @@
+pipeline {
+    agent { label 'docker-agent' }
+
+    environment {
+        IMAGE_NAME = "dockerimg"
+        CONTAINER_NAME = "MyApp"
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Jasai007/Flask-DevOps-Toolkit.git'
+            }
+        }
+
+        stage('Run Tests in Docker') {
+            steps {
+                sh '''
+                    docker build -t test-container --target test .
+                    docker run --rm test-container
+                '''
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t $IMAGE_NAME .'
+            }
+        }
+
+        stage('Run Container') {
+            steps {
+                sh '''
+                    docker stop $CONTAINER_NAME || true
+                    docker rm $CONTAINER_NAME || true
+                    docker run -d -p 80:80 --name $CONTAINER_NAME $IMAGE_NAME
+                '''
+            }
+        }
+    }
+}

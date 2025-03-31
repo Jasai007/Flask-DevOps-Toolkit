@@ -1,0 +1,43 @@
+pipeline {
+    agent { label 'docker-agent' }  // Run only on the secure agent
+
+    environment {
+        IMAGE_NAME = "dockerimg"
+        CONTAINER_NAME = "MyApp"
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Jasai007/Flask-DevOps-Toolkit.git'
+            }
+        }
+        
+        stage('Install Dependencies and Run Tests') {
+            steps {
+                sh '''
+                    # Install dependencies without cache to avoid permission issues
+                    pip install --no-cache-dir -r requirements.txt
+                    # Run unit tests
+                    python3 -m unittest -v test.py
+                '''
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t $IMAGE_NAME .'
+            }
+        }
+
+        stage('Run Container') {
+            steps {
+                sh '''
+                    docker stop $CONTAINER_NAME || true
+                    docker rm $CONTAINER_NAME || true
+                    docker run -d -p 80:80 --name $CONTAINER_NAME $IMAGE_NAME
+                '''
+            }
+        }
+    }
+}

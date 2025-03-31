@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'Dockeragent' }  // Run only on the secure agent
+    agent { label 'DockerAgent' }  // Run only on the secure agent
 
     environment {
         IMAGE_NAME = "dockerimg"

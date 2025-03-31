@@ -1,5 +1,5 @@
 # Use the official Python image
-FROM python:3.8-slim
+FROM python:3.8-slim AS base
 
 
 # Set the working directory
@@ -22,5 +22,11 @@ ENV FLASK_RUN_PORT=80
 # Expose the port
 EXPOSE 80
 
-# Run the application
+# Test Stage
+FROM base AS test
+RUN pip install --no-cache-dir -r requirements.txt
+CMD ["python3", "-m", "unittest", "-v", "test.py"]
+
+# Final Production Image
+FROM base AS final
 CMD ["python", "routes.py"]

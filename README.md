@@ -43,13 +43,13 @@ Make sure to set the `FLASK_APP` environment variable to the main application fi
 All Jenkins pipeline scripts have been consolidated into the `Pipelines` folder, which contains the following subfolders:
 
 1. **Freestyle Pipeline**
-   - Located in the `Pipelines/Freestyle_pipeline/` folder.
+   - Located in the [`Pipelines/Freestyle_pipeline/`](./Pipelines/Freestyle_pipeline/) folder.
    - This project is designed to streamline CI/CD workflows using Jenkins Jobs.
 
 2. **Multi-Stage Dockerfile**
-   - Located in the `Pipelines/Multi-Stage_Dockerfile/` folder.
+   - Located in the [`Pipelines/Multi-Stage_Dockerfile/`](./Pipelines/Multi-Stage_Dockerfile/) folder.
    - This project contains a Jenkins pipeline configuration for automating the build and deployment of a Flask application using a multi-stage Dockerfile.
 
 3. **Test Jenkins Through Docker Agent**
-   - Located in the `Pipelines/Test_Jenkinsfile/` folder.
+   - Located in the [`Pipelines/Test_Jenkinsfile/`](./Pipelines/Test_Jenkinsfile/) folder.
    - This project focuses on testing Jenkins using a Docker agent for a flexible and isolated environment to run your CI/CD pipelines.

@@ -11,7 +11,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest  # Using GitHub-hosted runner
+    runs-on: self-hosted  # Self-hosted runner in WSL
 
     env:
       IMAGE_NAME: dockerimg
@@ -21,14 +21,9 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-
       - name: Install Dependencies
-        run: |
-          pip install --no-cache-dir -r requirements.txt
+        run: | 
+           python3 -m pip install --no-cache-dir --break-system-packages -r requirements.txt
 
       - name: Run Unit Tests
         run: |
@@ -41,8 +36,18 @@ jobs:
         run: |
           docker build -t $IMAGE_NAME .
 
+      - name: Stop and Remove Existing Container (if exists)
+        run: |
+          docker ps -q --filter "name=$CONTAINER_NAME" | grep -q . && docker stop $CONTAINER_NAME && docker rm $CONTAINER_NAME || echo "No existing container to stop."
+
       - name: Run Docker Container
         run: |
-          docker stop $CONTAINER_NAME || true
-          docker rm $CONTAINER_NAME || true
-          docker run -d -p 80:80 --name $CONTAINER_NAME $IMAGE_NAME
+          docker run -d -p 80:80 --name $CONTAINER_NAME --restart always $IMAGE_NAME
+
+      - name: Verify Running Container
+        run: |
+          docker ps -a
+
+      - name: Show Container Logs (for Debugging)
+        if: always()
+        run: docker logs $CONTAINER_NAME

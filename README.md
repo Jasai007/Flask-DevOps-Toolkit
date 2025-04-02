@@ -53,3 +53,7 @@ All Jenkins pipeline scripts have been consolidated into the `Pipelines` folder,
 3. **Test Jenkins Through Docker Agent**
    - Located in the [`Pipelines/Test_Jenkinsfile/`](./Pipelines/Test_Jenkinsfile/) folder.
    - This project focuses on testing Jenkins using a Docker agent for a flexible and isolated environment to run your CI/CD pipelines.
+
+## GitHub Workflows
+
+This project includes GitHub Actions workflows for Continuous Integration and Continuous Deployment (CI/CD) located in the `.github/workflows` directory. For detailed descriptions of each workflow, please refer to the [README file in the workflows directory](./.github/workflows/README.md).

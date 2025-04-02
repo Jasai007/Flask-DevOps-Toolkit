@@ -21,14 +21,9 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Verify System Python
-        run: |
-          python3 --version 
-          which python3       
-
       - name: Install Dependencies
         run: | 
-           python3 -m pip install --no-cache-dir --break-system-packages -r requirements.txt
+           python3 -m pip install --no-cache-dir -r requirements.txt
 
       - name: Run Unit Tests
         run: |

@@ -23,12 +23,12 @@ jobs:
 
       - name: Verify System Python
         run: |
-          python3 --version  # Check installed Python version
-          which python3       # Verify Python path
+          python3 --version 
+          which python3       
 
       - name: Install Dependencies
         run: |
-          python3 -m pip install --upgrade pip  # Ensure latest pip
+          python3 -m pip install --upgrade pip  
           python3 -m pip install --no-cache-dir -r requirements.txt
 
       - name: Run Unit Tests

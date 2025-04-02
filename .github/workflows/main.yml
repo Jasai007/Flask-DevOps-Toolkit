@@ -11,7 +11,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: self-hosted  # self-hosted runner
+    runs-on: self-hosted  # Self-hosted runner in WSL
 
     env:
       IMAGE_NAME: dockerimg
@@ -21,14 +21,15 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
+      - name: Verify System Python
+        run: |
+          python3 --version  # Check installed Python version
+          which python3       # Verify Python path
 
       - name: Install Dependencies
         run: |
-          pip install --no-cache-dir -r requirements.txt
+          python3 -m pip install --upgrade pip  # Ensure latest pip
+          python3 -m pip install --no-cache-dir -r requirements.txt
 
       - name: Run Unit Tests
         run: |

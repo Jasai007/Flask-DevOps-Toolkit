@@ -1,6 +1,6 @@
 # GitHub Workflows for CI/CD
 
-This directory contains GitHub Actions workflows for Continuous Integration and Continuous Deployment (CI/CD) of the Flask application.
+This directory contains GitHub Actions Workflows for Continuous Integration and Continuous Deployment (CI/CD) of the Flask application.
 
 ## Workflows
 

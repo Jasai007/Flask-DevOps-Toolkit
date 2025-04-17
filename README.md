@@ -56,4 +56,4 @@ All Jenkins pipeline scripts have been consolidated into the `Pipelines` folder,
 
 ## GitHub Workflows
 
-This project includes GitHub Actions workflows for Continuous Integration and Continuous Deployment (CI/CD) located in the `.github/workflows` directory. For detailed descriptions of each workflow, please refer to the [README file in the workflows directory](./.github/workflows/README.md).
+This project includes GitHub Actions workflows for Continuous Integration and Continuous Deployment (CI/CD) located in the `.github/workflows` directory. For detailed descriptions of each workflow, please refer to the - [README file in the workflows directory](./.github/workflows/README.md).

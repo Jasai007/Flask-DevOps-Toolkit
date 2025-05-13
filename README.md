@@ -57,3 +57,11 @@ All Jenkins pipeline scripts have been consolidated into the `Pipelines` folder,
 ## GitHub Workflows
 
 This project includes GitHub Actions workflows for Continuous Integration and Continuous Deployment (CI/CD) located in the `.github/workflows` directory. For detailed descriptions of each workflow, please refer to the [README file in the workflows directory](./.github/workflows/README.md).
+
+## SonarQube
+
+SonarQube is a platform for continuous inspection of code quality, performing automatic static analysis to detect bugs, code smells, and security vulnerabilities. This project includes a Docker Compose setup to run SonarQube locally, detailed in the [SonarQube Docker Compose README](./sonarqube/Readme.md).
+
+Additionally, a GitHub Actions workflow is configured to run SonarQube scans on pushes to the main branch. The workflow is defined in the [SonarQube GitHub workflow file](./.github/workflows/sonarqube.yml) and uses secrets for authentication and configuration.
+
+Integrating SonarQube into your development and CI/CD processes helps maintain high code quality and early detection of issues.

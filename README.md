@@ -10,14 +10,14 @@ A web app built with Flask, providing tools and features for automating DevOps p
    cd flask-devops-toolkit
    ```
 
-2. Install the required dependencies:
+2. Install the required dependencies :
    ```bash
    pip install -r requirements.txt
    ```
 
 ## Usage
 
-To run the application, use the following command:
+To run the application, use the following command :
 ```bash
 flask run
 ```

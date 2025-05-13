@@ -45,6 +45,9 @@ SonarQube performs automatic static code analysis to detect bugs, code smells, a
 
 - For more details on configuring and using SonarQube, visit the [official SonarQube documentation](https://docs.sonarqube.org/latest/).
 
-## License
+## Learn More
 
-This setup is provided as-is under the project license.
+For a detailed guide on what SonarQube is, how to set it up with Docker Compose, and why you should use it, check out my blog article:  
+[SonarQube: What It Is, How to Set It Up with Docker Compose, and Why You Should Use It](https://jasaiblogs.hashnode.dev/sonarqube-what-it-is-how-to-set-it-up-with-docker-compose-and-why-you-should-use-it)
+
+

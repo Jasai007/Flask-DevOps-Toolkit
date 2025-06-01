@@ -54,6 +54,10 @@ All Jenkins pipeline scripts have been consolidated into the `Pipelines` folder,
    - Located in the [`Pipelines/Test_Jenkinsfile/`](./Pipelines/Test_Jenkinsfile/) folder.
    - This project focuses on testing Jenkins using a Docker agent for a flexible and isolated environment to run your CI/CD pipelines.
 
+4. **Custom Jenkins Agent Images**
+   - Located in the [`Jenkins/Custom_Jenkins_Agent/`](./Jenkins/Custom_Jenkins_Agent/) folder.
+   - This directory contains custom Dockerfiles and documentation for building specialized Jenkins agent images, such as Amazon Linux and insecure SSH agents, which can be used to extend Jenkins pipeline capabilities for specific environments or security requirements.
+
 ## GitHub Workflows
 
 This project includes GitHub Actions workflows for Continuous Integration and Continuous Deployment (CI/CD) located in the `.github/workflows` directory. For detailed descriptions of each workflow, please refer to the [README file in the workflows directory](./.github/workflows/README.md).

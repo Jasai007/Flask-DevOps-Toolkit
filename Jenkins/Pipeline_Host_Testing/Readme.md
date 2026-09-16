@@ -1,27 +1,95 @@
-# Jenkins Pipeline Overview
+# Jenkins Pipeline: Host-Based Testing Pattern
 
-This Jenkinsfile automates the Continuous Integration and Continuous Deployment (CI/CD) process for the Flask application using Docker. It streamlines the workflow of building, testing, and deploying the application.
+This directory contains a Declarative Jenkins Pipeline demonstrating the **Host-Based Testing Pattern**. 
 
-## Pipeline Stages
+In this pattern, dependency installation and unit testing execute directly within the Jenkins agent's host operating system environment before building and deploying the final application using the project's root `Dockerfile`.
 
-1. **Checkout Code**: 
-   - The pipeline begins by checking out the latest code from the main branch of the GitHub repository, ensuring that the most recent version is used for the build.
+---
 
-2. **Install Dependencies and Run Tests**: 
-   - This stage upgrades `pip` and installs the required dependencies listed in the `requirements.txt` file. 
-   - It also executes unit tests to verify that the application is functioning correctly before proceeding.
+## Key Characteristics
 
-3. **Build Docker Image**: 
-   - The pipeline builds a Docker image for the application using the Dockerfile located in the root directory. 
-   - The image is tagged with the build number for version tracking.
+- **Host-Level Execution:** Dependencies (`requirements.txt`) and test suites (`unittest`) run directly on the Jenkins worker node using the agent's installed Python 3 runtime and pip package manager.
+- **Sequential Validation:** The pipeline verifies code correctness at the host level first; Docker packaging only triggers if all unit tests pass.
+- **Agent Prerequisites:** The build agent must have `python3`, `pip`, and necessary build libraries pre-installed in its environment.
+- **Root Dockerfile Context:** Builds the runtime container directly from the application's root `Dockerfile` once host-level validation succeeds.
 
-4. **Deploy Application**: 
-   - The pipeline stops and removes any existing container running the application, then deploys a new container using the newly built image. 
-   - The application runs in detached mode and is accessible on port 80.
+---
+
+## Directory Structure
+
+```text
+└── Jenkins/
+    └── Pipeline_Host_Testing/
+        ├── Jenkinsfile         # Declarative Jenkins pipeline script
+        └── README.md           # Documentation for this pipeline pattern
+```
+
+---
+
+## Pipeline Workflow & Stages
+
+```text
+[Checkout Code]
+       │
+       ▼
+[Install Dependencies & Run Tests] ──► pip install & python3 -m unittest (on host)
+       │
+       ▼
+[Build Docker Image] ──► docker build -t $IMAGE_NAME . (uses root Dockerfile)
+       │
+       ▼
+[Run Container] ──► docker run -d -p 80:80 --name $CONTAINER_NAME $IMAGE_NAME
+```
+
+### 1. Checkout Code
+- Clones the latest commit from the repository:  
+  `https://github.com/Jasai007/Flask-DevOps-Toolkit.git` on the `main` branch.
+
+### 2. Install Dependencies and Run Tests
+- Installs application requirements directly onto the agent host:
+  ```bash
+  pip install --no-cache-dir -r requirements.txt
+  ```
+- Executes unit tests using Python's native test runner:
+  ```bash
+  python3 -m unittest -v test.py
+  ```
+- **Fails fast:** If any test fails, execution halts immediately, preventing an untested or broken image from being built.
+
+### 3. Build Docker Image
+- Packages the verified application using the root `Dockerfile`:
+  ```bash
+  docker build -t $IMAGE_NAME .
+  ```
+
+### 4. Run Container
+- Stops and removes any previously running container sharing the same name to prevent port collisions:
+  ```bash
+  docker stop $CONTAINER_NAME || true
+  docker rm $CONTAINER_NAME || true
+  ```
+- Deploys the freshly built container in detached mode, binding host port `80` to container port `80`:
+  ```bash
+  docker run -d -p 80:80 --name $CONTAINER_NAME $IMAGE_NAME
+  ```
+
+---
 
 ## Environment Variables
 
-- `APP_NAME`: Specifies the name of the application container.
-- `IMAGE_NAME`: Defines the name of the Docker image.
+| Variable | Default Value | Description |
+| :--- | :--- | :--- |
+| `IMAGE_NAME` | `dockerimg` | Tag assigned to the generated Docker image. |
+| `CONTAINER_NAME` | `MyApp` | Identifier for the running Docker container instance. |
 
-This Jenkinsfile provides a robust framework for automating the deployment of the Flask application, ensuring that the latest code is always tested and deployed efficiently.
+---
+
+## Architectural Trade-offs
+
+| Factor | Host-Based Testing (This Setup) | Containerized Multi-Stage Testing |
+| :--- | :--- | :--- |
+| **Agent Setup** | Heavy (Agent requires Python 3, Pip, and dependencies) | Lean (Agent only requires the Docker CLI) |
+| **Dependency Isolation** | Low (Packages install into the agent host environment) | Complete (Tests run inside disposable container layers) |
+| **Dockerfile Location** | References the standard root `Dockerfile` | Uses a dedicated multi-stage `Dockerfile` with build targets |
+| **Failure Point** | Host shell step (`sh`) | Docker build step (`--target test`) |
+| **Best Used For** | Simple pipelines, rapid local validation, static agent pools | Production CI/CD, ephemeral nodes, heterogeneous runtimes |

@@ -1,89 +1,102 @@
-# Jenkins SSH-Enabled Amazon Linux Docker Image
+# Jenkins SSH Agent: Insecure / Demonstration Build
 
-This Dockerfile builds a Docker image based on **Amazon Linux 2023** with Java 17, SSH server, and essential tools pre-installed. It is designed for scenarios where you need SSH access (including root) to a container, such as for Jenkins agents or remote administration in CI/CD pipelines.
-
----
-
-## What This Dockerfile Does
-
-1. **Base Image**  
-   Uses `amazonlinux:2023` as the starting point.
-
-2. **System Update & Package Installation**  
-   - Updates all system packages.
-   - Installs `git`, `wget`, `openssh-server`, `shadow-utils`, and `python3`.
-
-3. **Java 17 Installation**  
-   - Downloads and installs Oracle JDK 17.
-
-4. **Root Password Setup**  
-   - Sets the root password to `redhat` (for demonstration/testing).
-
-5. **SSH Server Configuration**  
-   - Generates SSH host keys.
-   - Enables password authentication.
-   - Allows root login via SSH.
-
-6. **Expose SSH Port**  
-   - Exposes port 22 for SSH access.
-
-7. **Container Startup**  
-   - Starts the SSH daemon in the foreground when the container runs.
+> ⚠️ **SECURITY WARNING: FOR LAB & EDUCATIONAL USE ONLY**  
+> This image contains intentionally insecure defaults, including hardcoded credentials (`root:redhat`), enabled root SSH access, and password authentication. **Do not deploy this container in production environments or expose it to public networks.**
 
 ---
 
-## How to Build and Run
+## Overview
 
-### 1. Build the Image
+This setup demonstrates a minimal SSH-enabled container based on **Amazon Linux 2023** configured to accept Jenkins SSH connections. 
 
-```sh
-docker build -t jenkinsworker . 
+It serves as an introductory baseline to understand how Jenkins interacts with remote agents over SSH before transitioning to hardened, key-based, non-root agent architectures.
+
+---
+
+## Technical Specifications
+
+- **Base Image:** Amazon Linux 2023
+- **JDK Runtime:** Oracle JDK 17 (RPM build)
+- **Tooling:** Git, Wget, Python 3, OpenSSH Server
+- **Authentication Model:** Password-based (`root` / `redhat`)
+- **Daemon:** OpenSSH Server (`sshd`) running in foreground mode (`-D`)
+
+---
+
+## Container Build & Run
+
+### 1. Build the Docker Image
+
+Run the build command from inside the `jenkins-ssh-agent-insecure` directory:
+
+```bash
+docker build -t jenkins-ssh-agent-insecure:latest .
 ```
+
+---
 
 ### 2. Run the Container
 
-```sh
-docker run -d --name my-jenkins-agent  jenkins-ssh-agent
+Start the agent container and bind the SSH daemon to host port `2222`:
+
+```bash
+docker run -d \
+  --name jenkins-agent-insecure \
+  --restart unless-stopped \
+  -p 2222:22 \
+  jenkins-ssh-agent-insecure:latest
 ```
-- This maps container port 22 to host port 2222.
 
-### 3. SSH into the Container
+*Note: Port `2222` is used on the host to avoid port collisions with the host machine's own SSH daemon on port `22`.*
 
-```sh
+---
+
+### 3. Verify Connection Locally
+
+Test the SSH connection from your local terminal or host instance:
+
+```bash
 ssh root@localhost -p 2222
 ```
-- Password: `redhat`
+
+- **Password:** `redhat`
 
 ---
 
-## Where to Use
+## Configuring the Node in Jenkins
 
-- **Jenkins SSH agents** (for testing or internal CI/CD).
-- **Development and debugging** environments where SSH access is needed.
-- **Automated scripts** that require SSH into a container.
-
----
-
-## Cautions & Security Notes
-
-- **Root SSH Login Enabled:**  
-  Root login is enabled and the password is hardcoded (`redhat`).  
-  **Never use this image in production or on public networks.**
-
-- **Password Authentication:**  
-  Password authentication is enabled, which is less secure than SSH key authentication.
-
-- **For Production:**  
-  - Disable root login.
-  - Use SSH keys instead of passwords.
-  - Use a non-root user for SSH access.
-  - Change or randomize passwords.
+1. Navigate to **Manage Jenkins** > **Nodes** > **New Node**.
+2. Configure the following node settings:
+   - **Node Name:** `insecure-demo-agent`
+   - **Remote root directory:** `/root`
+   - **Launch method:** Launch agents via SSH
+   - **Host:** IP address of the worker host
+   - **Port:** `2222`
+   - **Credentials:** Username with password (`Username: root`, `Password: redhat`)
+   - **Host Key Verification Strategy:** *Non-verifying Verification Strategy* (Lab use only)
+3. Save and click **Launch Agent**.
 
 ---
 
-## Customization
+## Identified Security Vulnerabilities
 
-To make this image more secure:
-- Replace the root password with a strong, unique one or use SSH keys.
-- Disable root login by changing `PermitRootLogin yes` to `no` in `/etc/ssh/sshd_config`.
-- Create a dedicated user for SSH access.
+| Insecure Configuration | Risk / Impact | Production Best Practice |
+| :--- | :--- | :--- |
+| **Hardcoded Root Password** | Anyone with network access can compromise root. | Remove passwords entirely; use asymmetric SSH key pairs. |
+| **Direct Root Login (`PermitRootLogin yes`)** | Complete container takeover; risk of container escapes. | Run SSH under a dedicated, non-root user (e.g., `jenkins` UID 1000). |
+| **Password Authentication Enabled** | Susceptible to credential leaks and brute-force attacks. | Disable password authentication (`PasswordAuthentication no`). |
+| **Broad User Access** | Unrestricted access across system accounts. | Explicitly restrict access via `AllowUsers jenkins`. |
+
+---
+
+## Hardened Alternative
+
+For an enterprise-ready, hardened version of this build agent, refer to the sibling directory:
+
+👉 **[Hardened SSH Agent (Amazon Linux 2023)](../jenkins-ssh-agent-amazonlinux)**
+
+The hardened version introduces:
+- SSH public/private key authentication (zero passwords)
+- Dedicated non-root `jenkins` user
+- Complete lockdown of root SSH logins
+- Minimal privilege boundaries matching production standards

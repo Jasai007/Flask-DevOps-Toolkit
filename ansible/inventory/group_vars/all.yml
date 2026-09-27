@@ -1,0 +1,19 @@
+---
+# =============================================================================
+# inventory/group_vars/all.yml - variables for group "all" (every host)
+# -----------------------------------------------------------------------------
+# SCOPE: every host in this inventory inherits these values. The file name
+# (all.yml) must match the GROUP NAME. The directory (group_vars/) sits next
+# to the inventory file it belongs to - move them together.
+#
+# PRIORITY: inventory group_vars outrank role defaults but lose against
+# play vars and -e.  See docs/roles.md for the full precedence ladder.
+#
+# WHO USES 'environment':
+#   playbooks/12_tags.yml       rendered into /tmp/ansible-tags-demo/app.conf
+#   playbooks/22_selftest.yml   asserted to be defined (proves this file loads)
+#   roles/webserver template    shown on the deployed page
+#
+# VERIFY:  ansible-inventory --list | grep -A2 environment
+# =============================================================================
+environment: lab

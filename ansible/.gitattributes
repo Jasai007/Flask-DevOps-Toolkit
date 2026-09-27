@@ -1,0 +1,21 @@
+# =============================================================================
+# .gitattributes - keep file line endings correct on every platform
+# =============================================================================
+# This project is edited on Windows but executed inside WSL/Linux/macOS.
+# Shell scripts and Python MUST be LF: CRLF makes bash fail with
+# "$'\r': command not found", breaks Python shebang lines, and even
+# scripts/vault_pass_demo.txt (executed by ansible-vault!) dies with
+# "Exec format error" if git rewrites it to CRLF on checkout.
+#
+# `* text=auto eol=lf` = every text file is normalised to LF in the repo AND
+# checked out as LF, regardless of core.autocrlf on the machine. (Overrides
+# Windows-only autocrlf=true, which would otherwise re-introduce CRLF.)
+# =============================================================================
+* text=auto eol=lf
+
+# Binary files - never touch line endings
+*.png binary
+*.jpg binary
+*.gif binary
+*.pdf binary
+

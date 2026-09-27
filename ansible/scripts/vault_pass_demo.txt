@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# =============================================================================
+# scripts/vault_pass_demo.txt - DEMO vault password, provided as a SCRIPT
+# -----------------------------------------------------------------------------
+# WHY A SCRIPT AND NOT A PLAIN FILE? Ansible treats any EXECUTABLE
+# --vault-password-file as a password script: it runs it and uses stdout as
+# the password. That is an official feature (handy for pulling passwords
+# from a keyring/agent without ever storing them).
+#
+# WHY IT MATTERS HERE: on WSL, /mnt/<drive> mounts are world-writable (777),
+# so EVERY file there looks executable and Ansible runs this as a script.
+# A plain-text password file would fail with "Exec format error" - this
+# script works on WSL /mnt/*, on normal Linux checkouts (committed with the
+# executable bit) and after the /etc/wsl.conf metadata fix alike.
+#
+# DEMO ONLY - the password below is public on purpose. Real password scripts
+# must be mode 0700 and live OUTSIDE the repository.
+#
+# FALLBACK if your filesystem lost the executable bit:
+#   chmod +x scripts/vault_pass_demo.txt        (restore it)
+#   ansible-playbook playbooks/16_vault.yml --ask-vault-pass   (interactive)
+# =============================================================================
+echo ansible-demo-vault-password
+

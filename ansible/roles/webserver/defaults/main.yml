@@ -1,0 +1,20 @@
+---
+# =============================================================================
+# roles/webserver/defaults/main.yml - WEAKEST variable priority
+# -----------------------------------------------------------------------------
+# Everything a site might want to change lives HERE (not in tasks/), because
+# defaults can be overridden by inventory vars, play vars or -e without
+# touching the role. Rule of thumb: if two customers differ on it -> default.
+# =============================================================================
+
+# Package/service to install and manage (works for apache2/httpd too - just
+# override:  -e webserver_package=apache2 -e webserver_service=httpd)
+webserver_package: nginx
+webserver_service: nginx
+
+# Where the rendered page is deployed.
+webserver_docroot: /var/www/html
+
+# Page content - consumed by templates/index.html.j2
+app_name: Ansible Demo Application
+webserver_port: 8080

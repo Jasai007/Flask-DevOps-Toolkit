@@ -1,0 +1,51 @@
+---
+# =============================================================================
+# .github/workflows/ansible.yml - Continuous Integration for this project
+# -----------------------------------------------------------------------------
+# Reusable automation means the SAME checks run on every push, everywhere:
+#   1. YAML style        (yamllint)
+#   2. Ansible best practice (ansible-lint)
+#   3. Syntax check      (ansible-playbook --syntax-check)
+# Local equivalent: bash scripts/validate.sh
+# =============================================================================
+name: ansible-ci
+
+on:                      # trigger: every push and every pull request
+  push:
+    branches: [master, main]
+  pull_request:
+
+jobs:
+  lint-and-validate:
+    runs-on: ubuntu-latest   # GitHub's Ubuntu runner = clean control node
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Ansible tooling
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible-core yamllint ansible-lint
+
+      - name: YAML style check
+        run: yamllint -c .yamllint.yml .
+
+      - name: Ansible best-practice lint
+        run: ansible-lint
+
+      - name: Syntax-check every playbook
+        run: |
+          for pb in playbooks/*.yml site.yml roles/*/tests/test.yml; do
+            echo "== $pb"
+            ansible-playbook --syntax-check "$pb"
+          done
+
+      - name: Inventory sanity (static + dynamic)
+        run: |
+          ansible-inventory -i inventory/hosts --graph
+          ansible-inventory -i inventory/dynamic/inventory.py --graph

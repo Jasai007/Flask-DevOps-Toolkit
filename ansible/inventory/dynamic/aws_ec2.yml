@@ -1,0 +1,50 @@
+---
+# =============================================================================
+# inventory/dynamic/aws_ec2.yml - PLUGIN-based dynamic inventory (REFERENCE)
+# -----------------------------------------------------------------------------
+# SECOND STYLE of dynamic inventory: instead of a script that prints JSON,
+# an INVENTORY PLUGIN runs INSIDE Ansible, talks to an API and builds the
+# inventory itself. Officially the preferred approach for cloud providers.
+#
+# WHAT IT WOULD TAKE TO RUN THIS FILE:
+#   1. ansible-galaxy collection install amazon.aws      (from requirements.yml)
+#   2. AWS credentials in the environment (~/.aws/credentials is already
+#      picked up by the AWS SDK, or export AWS_ACCESS_KEY_ID / SECRET)
+#   3. ansible-inventory -i inventory/dynamic/aws_ec2.yml --graph
+#
+# IT IS INTENTIONALLY NOT ACTIVE: the default inventory in ansible.cfg is
+# the static file, so nothing here runs until you pass it with -i.
+#
+# COMPARED TO THE SCRIPT STYLE (inventory.py):
+#   script   -> any language, you ship JSON, you manage caching/groups
+#   plugin   -> declarative YAML, native filtering/grouping, maintained upstream
+# =============================================================================
+plugin: amazon.aws.aws_ec2        # which inventory plugin parses this file
+
+# Which regions to query (omit to use AWS_DEFAULT_REGION / config chain).
+regions:
+  - us-east-1
+  - eu-west-1
+
+# Server-side filtering - only instances matching ALL filters are returned.
+filters:
+  instance-state-name: running     # never pick up stopped instances
+  tag:Environment: production      # only production-tagged machines
+
+# Which hostname Ansible should show/use for each instance.
+hostnames:
+  - tag:Name                       # fall back to private IP if tag missing
+  - private-ip-address
+
+# GROUPING: create a group per value automatically.
+#   tag:Role=frontend  ->  group 'role_frontend'
+#   placement.region   ->  group 'region_us_east_1'
+keyed_groups:
+  - key: tags.Role
+    prefix: role
+  - key: placement.region
+    prefix: region
+
+# Per-host variable composition (Jinja expressions over instance attributes).
+compose:
+  ansible_host: private_ip_address # connect via private IP inside the VPC

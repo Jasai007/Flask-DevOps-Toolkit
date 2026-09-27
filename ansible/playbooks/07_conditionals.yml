@@ -1,0 +1,40 @@
+---
+# =============================================================================
+# Playbook 07: CONDITIONALS - one playbook, different behaviour
+# -----------------------------------------------------------------------------
+# WHY:  Real fleets are not uniform: Debian needs apt, RHEL needs dnf, some
+#       sites enable features others do not. `when` lets ONE playbook adapt.
+#
+# RUN:  ansible-playbook playbooks/07_conditionals.yml             # installs
+#       ansible-playbook playbooks/07_conditionals.yml -e install_nginx=false
+#               # watch the tasks get SKIPPED in the output and PLAY RECAP
+#
+# TRAP OBSERVED ON THIS PROJECT: `-e install_nginx=false` delivers the STRING
+# "false", and a BARE `when: install_nginx` treats any non-empty string as
+# TRUE - the package task RAN (and asked for sudo) until '| bool' was added.
+# This is why production conditionals carry '| bool' on boolean flags.
+#
+# LEARNS: when expressions (NO {{ }} needed - Ansible wraps them for you),
+#         why -e values are strings, '| bool' coercion, reading 'skipped'.
+# =============================================================================
+- name: Work with conditionals
+  hosts: local
+  vars:
+    install_nginx: true        # flip from CLI: -e install_nginx=false
+  tasks:
+    - name: Install nginx when enabled
+      become: true                    # only this task needs root (not the play)
+      ansible.builtin.package:
+        name: nginx
+        state: present
+      when: install_nginx | bool      # '| bool' MANDATORY for -e values:
+                                      # "false" (string) without it is TRUTHY.
+                                      # Also: `when: {{ install_nginx }}` is
+                                      # WRONG syntax - never use {{ }} here.
+
+    # A conditional task that does NOT need root - handy for observing skips:
+    - name: Report which branch was taken
+      ansible.builtin.debug:
+        msg: "install_nginx={{ install_nginx }} -> package task ran or skipped"
+      when: install_nginx | bool      # '| bool' converts the STRING forms
+                                      # "true"/"false" that -e often delivers

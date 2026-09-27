@@ -1,0 +1,15 @@
+---
+# =============================================================================
+# roles/webserver/handlers/main.yml - tasks that ONLY run when notified
+# -----------------------------------------------------------------------------
+# Handlers are the "event system" of Ansible: tasks announce change with
+# `notify:`, handlers execute ONCE at the END of the play (not per change),
+# in the order they are defined here. Restarting nginx 3x because 3 tasks
+# changed would be wasteful and disruptive - handlers collapse that to 1.
+# The name MUST match the notify: string exactly.
+# =============================================================================
+- name: Restart web server
+  ansible.builtin.service:
+    name: "{{ webserver_service }}"
+    state: restarted
+  become: true

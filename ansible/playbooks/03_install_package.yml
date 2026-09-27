@@ -1,0 +1,27 @@
+---
+# =============================================================================
+# Playbook 03: PACKAGE MODULE - install software on ANY distro
+# -----------------------------------------------------------------------------
+# WHY:  `apt install nginx` is Ubuntu-only; `dnf install nginx` is RHEL-only.
+#       The generic `package` module asks the TARGET which package manager it
+#       uses (fact ansible_os_family) and picks the right one.
+#
+# RUN:  ansible-playbook playbooks/03_install_package.yml
+#       ansible-playbook --check playbooks/03_install_package.yml   # dry run
+#
+#       # Read the module's official documentation first - for ANY module:
+#       ansible-doc ansible.builtin.package
+#       ansible-doc -l                 # list every module on this machine
+#
+# LEARNS: package module, state values, distro independence, ansible-doc.
+# =============================================================================
+- name: Install a package
+  hosts: local
+  become: true                     # package management requires root
+  tasks:
+    - name: Install nginx
+      ansible.builtin.package:
+        name: nginx
+        state: present             # present = install if missing (default)
+                                   # latest  = upgrade to newest available
+                                   # absent  = remove

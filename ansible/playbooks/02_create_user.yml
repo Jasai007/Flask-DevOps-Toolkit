@@ -1,0 +1,29 @@
+---
+# =============================================================================
+# Playbook 02: USER MODULE - the meaning of IDEMPOTENCE
+# -----------------------------------------------------------------------------
+# WHY:  The heart of configuration management: describe the DESIRED STATE,
+#       not the commands to get there. Ansible compares reality with the
+#       description and only acts on the difference.
+#
+# RUN:  ansible-playbook playbooks/02_create_user.yml       # first run:  changed=1
+#       ansible-playbook playbooks/02_create_user.yml       # second run: changed=0
+#
+# OUTPUT TO WATCH FOR: run it TWICE. The second run reports changed=0 because
+# the user already exists - that is idempotence. A `command: useradd ...`
+# version would FAIL on the second run.
+#
+# LEARNS: user module, state present/absent, become for privileged changes,
+#         why re-running automation must always be safe.
+# =============================================================================
+- name: Manage users
+  hosts: local
+  become: true                     # creating users requires root
+  tasks:
+    - name: Create application user
+      ansible.builtin.user:
+        name: appuser
+        state: present              # desired state: 'present' = exists
+                                    #                'absent'  = removed
+                                    # compare with: command: useradd appuser
+                                    # (an ORDER to run - breaks on re-run)

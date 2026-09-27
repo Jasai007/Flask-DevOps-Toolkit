@@ -1,0 +1,39 @@
+---
+# =============================================================================
+# requirements.yml - ONE file that rebuilds all EXTERNAL automation deps
+# -----------------------------------------------------------------------------
+# INSTALL EVERYTHING:      ansible-galaxy install -r requirements.yml
+# Roles only:              ansible-galaxy role install -r requirements.yml
+# Collections only:        ansible-galaxy collection install -r requirements.yml
+#
+# WHERE THEY LAND (see roles_path / collections_path in ansible.cfg):
+#   roles       -> ~/.ansible/roles
+#   collections -> ~/.ansible/collections
+#
+# VERSIONING: PIN in real projects (version: "3.1.4") so every machine gets
+# identical automation - unpinned means "whatever latest is today", which
+# breaks reproducibility. Floating versions are fine while learning.
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# ROLES - named <namespace>.<rolename> on galaxy.ansible.com
+# ---------------------------------------------------------------------------
+roles:
+  - name: geerlingguy.nginx
+    # version: "3.1.4"        # PIN in production. One of these days "latest"
+                              # will change underneath you - pin it.
+  - name: geerlingguy.php
+    # version: ">=4.0,<5.0"   # version RANGES are also supported
+
+# ---------------------------------------------------------------------------
+# COLLECTIONS - bundles of modules/plugins/roles/variables distributed as one
+# unit. Everything in a collection shares a namespace and version.
+#   community.general  - the huge community grab-bag (incl. yaml callback)
+#   ansible.posix      - core-adjacent extras (incl. timer/profile_tasks)
+#   amazon.aws         - AWS modules (used by the dynamic inventory example)
+# ---------------------------------------------------------------------------
+collections:
+  - name: community.general
+    # version: ">=8.0.0"
+  - name: ansible.posix
+  - name: amazon.aws

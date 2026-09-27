@@ -1,0 +1,13 @@
+---
+# =============================================================================
+# inventory/host_vars/localhost.yml - variables for ONE host (localhost)
+# -----------------------------------------------------------------------------
+# SCOPE: only the host named 'localhost'. host_vars beats group_vars when
+# both define the same name (host is more specific than group).
+#
+# FILE NAME = HOST NAME:  host_vars/<inventory-hostname>.yml
+# This is where per-machine quirks live (unique ports, paths, credentials).
+#
+# VERIFY:  ansible-inventory --host localhost
+# =============================================================================
+host_role: control-and-test

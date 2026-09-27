@@ -1,0 +1,55 @@
+---
+# =============================================================================
+# Playbook 16: VAULT - keep secrets out of git while keeping them next to code
+# -----------------------------------------------------------------------------
+# WHY:  Playbooks are committed to git. Passwords/API keys must not be.
+#       ansible-vault encrypts FILES (or single strings) with AES256, so the
+#       encrypted blob is safe to commit while the plaintext never is.
+#
+# FILES INVOLVED:
+#   vault/secrets.yml              <- ENCRYPTED (safe to commit)
+#   scripts/vault_pass_demo.txt    <- DEMO password (public on purpose!)
+#
+# STEP-BY-STEP (details in vault/README.md and docs/02-advanced-fundamentals.md):
+#   1. View:   ansible-vault view vault/secrets.yml \
+#                --vault-password-file scripts/vault_pass_demo.txt
+#   2. Edit:   ansible-vault edit vault/secrets.yml \
+#                --vault-password-file scripts/vault_pass_demo.txt
+#   3. Run:    ansible-playbook playbooks/16_vault.yml \
+#                --vault-password-file scripts/vault_pass_demo.txt
+#   4. Shortcut: uncomment vault_password_file in ansible.cfg
+#
+# TRY ALSO:  ansible-vault encrypt_string 'my-secret' --name vault_new_key
+#            ansible-vault rekey vault/secrets.yml     (change the password)
+#
+# LEARNS: encrypted file at rest, --vault-password-file, include_vars,
+#         no_log (hide task output), secret hygiene rules.
+# =============================================================================
+- name: Use encrypted variables
+  hosts: local
+  tasks:
+    # Path is relative to this playbook's directory (playbooks/ -> vault/).
+    # Without the password file this task fails with:
+    #   "attempted to decrypt using an invalid password"
+    - name: Load the encrypted secrets file (decrypted in MEMORY only)
+      ansible.builtin.include_vars: ../vault/secrets.yml
+
+    - name: Fail loudly if decryption produced nothing
+      ansible.builtin.assert:
+        that:
+          - vault_demo_app is defined
+          - vault_demo_token is defined
+          - vault_demo_token | length > 0
+        success_msg: "Vault decryption OK - encrypted variables are readable."
+
+    # FOR LEARNING ONLY: this prints a (fake) secret so you can SEE the flow.
+    - name: Use a decrypted variable like any other variable
+      ansible.builtin.debug:
+        msg: "App '{{ vault_demo_app }}' token = {{ vault_demo_token }}"
+
+    # REAL-WORLD RULE: add no_log: true to any task that touches secrets so
+    # the value never lands in logs, CI output or terminal scrollback.
+    - name: Same value but hidden with no_log (do this for real secrets)
+      ansible.builtin.debug:
+        msg: "token = {{ vault_demo_token }}"
+      no_log: true                   # output will read "censored due to no_log"

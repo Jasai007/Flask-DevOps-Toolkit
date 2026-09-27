@@ -1,0 +1,68 @@
+---
+# =============================================================================
+# Playbook 13: BLOCKS - group tasks and give the whole group ONE error handler
+# -----------------------------------------------------------------------------
+# WHY:  Instead of repeating failed_when/ignore_errors on every single task,
+#       a block gives a group of tasks a shared rescue (like try/except in
+#       Python) and an always section (like finally).
+#
+# RUN:  ansible-playbook playbooks/13_blocks.yml
+#       ansible-playbook playbooks/13_blocks.yml -v
+#
+# OUTPUT TO WATCH FOR:
+#   * the middle task FAILS on purpose (cat of a missing file)
+#   * 'rescue' runs instead of aborting the play
+#   * 'always' cleans up no matter what
+#   * PLAY RECAP shows  rescued=1  and the play finishes GREEN
+#
+# LEARNS: block / rescue / always, task registration (register:), why a
+#         failing task inside a block with a rescue does NOT fail the play.
+# =============================================================================
+- name: Demonstrate block, rescue and always
+  hosts: local
+  vars:
+    demo_dir: /tmp/ansible-block-demo
+    missing_file: /tmp/ansible-block-demo/does-not-exist.txt
+  tasks:
+    - name: 'TRY - this whole block behaves like try { ... }'
+      block:
+        - name: Create the demo directory
+          ansible.builtin.file:
+            path: "{{ demo_dir }}"
+            state: directory
+            mode: '0755'
+
+        - name: Read a file that does not exist (fails ON PURPOSE)
+          ansible.builtin.command: cat {{ missing_file }}
+          register: read_result      # captures rc / stdout / stderr for rescue
+
+        - name: Never reached - the block aborted at the previous task
+          ansible.builtin.debug:
+            msg: "You will not see this line: the failing task stopped the block."
+
+      rescue:
+        # 'CATCH' - runs only when a task inside the block fails.
+        - name: Explain what went wrong (recovery)
+          ansible.builtin.debug:
+            msg: >-
+              Block failed as expected (rc={{ read_result.rc }}).
+              Rescue is handling it, so the PLAY itself is not marked failed.
+
+        # Recovery can still change state, e.g. write a marker/rollback file.
+        - name: Write a recovery marker
+          ansible.builtin.copy:
+            dest: "{{ demo_dir }}/recovered.txt"
+            content: "rescue section ran\n"
+            mode: '0644'
+
+      always:
+        # 'FINALLY' - runs on success AND failure. Perfect for cleanup,
+        # unlocking, disconnecting, closing sessions.
+        - name: Always clean up the demo directory
+          ansible.builtin.file:
+            path: "{{ demo_dir }}"
+            state: absent
+
+    - name: The play continues because rescue handled the failure
+      ansible.builtin.debug:
+        msg: "Still green - check PLAY RECAP for 'rescued=1'."

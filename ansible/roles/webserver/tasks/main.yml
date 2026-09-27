@@ -1,0 +1,37 @@
+---
+# =============================================================================
+# roles/webserver/tasks/main.yml - install, publish page, keep service up
+# -----------------------------------------------------------------------------
+# WHAT IT DOES:
+#   1. install the web server package
+#   2. render templates/index.html.j2 -> docroot (notifies a HANDLER)
+#   3. ensure the service is started + enabled at boot
+#
+# IDEMPOTENCE: run it twice - the second run reports "changed=0" because
+# every module checks real state before acting.
+# =============================================================================
+- name: Install the web server package
+  ansible.builtin.package:
+    name: "{{ webserver_package }}"
+    state: present
+  become: true
+
+- name: Deploy the application page from the role's template
+  ansible.builtin.template:
+    # Relative to THIS role's directory: roles/webserver/templates/index.html.j2
+    src: index.html.j2
+    dest: "{{ webserver_docroot }}/index.html"
+    # app_user is contributed by the 'common' role; default() keeps this role
+    # usable even when 'common' was not applied (e.g. tagged runs).
+    owner: "{{ app_user | default('root') }}"
+    group: "{{ app_group | default('root') }}"
+    mode: '0644'
+  become: true
+  notify: Restart web server    # handler runs ONLY if this task changed
+
+- name: Make sure the web server is running and starts on boot
+  ansible.builtin.service:
+    name: "{{ webserver_service }}"
+    state: started
+    enabled: true
+  become: true

@@ -1,0 +1,14 @@
+---
+# =============================================================================
+# roles/webserver/tests/test.yml - minimal smoke test FOR THE ROLE ALONE
+# -----------------------------------------------------------------------------
+# Run from the project root:
+#   ansible-playbook roles/webserver/tests/test.yml
+# It picks up inventory + ansible.cfg from the project (roles_path etc.).
+# When you publish a role, this file is the first thing reviewers run.
+# =============================================================================
+- name: Test the webserver role in isolation
+  hosts: local
+  become: true
+  roles:
+    - webserver          # dependency 'common' runs automatically via meta/

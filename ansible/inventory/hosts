@@ -1,0 +1,48 @@
+# =============================================================================
+# inventory/hosts - the DEFAULT (static) inventory for this project
+# -----------------------------------------------------------------------------
+# This file answers: WHO gets configured, and with which connection details.
+# It is wired up by ansible.cfg (`inventory = ./inventory/hosts`), so plain
+# `ansible-playbook <pb>` uses it. Override per run with `-i <other source>`.
+#
+# VIEW IT:
+#   ansible-inventory --graph          # tree of groups
+#   ansible-inventory --list           # every host + merged variables
+#   ansible-inventory --host localhost # variables of one host
+#
+# HOST PATTERNS (used in `hosts:` lines of playbooks):
+#   all | 'web1' | webservers | 'webservers:dbservers' (union)
+#   'webservers:&dbservers' (intersection) | 'webservers:!db1' (exclude)
+#
+# MORE: full remote template with per-host settings = inventory/hosts.example
+#       generated inventories              = inventory/dynamic/  (playbook 21)
+# =============================================================================
+
+# --- Local practice group (always present, needs no servers) -----------------
+[local]
+# ansible_connection=local -> tasks run directly on this machine, no SSH.
+localhost ansible_connection=local
+
+# --- Remote groups: enable when machines are available -----------------------
+# Uncomment the blocks below, fill in real addresses, then:
+#   ansible all -m ping
+#   ansible-playbook playbooks/01_basic_command.yml
+#
+# [webservers]
+# ansible_host = the address Ansible actually connects to (when it differs
+# from the inventory hostname, e.g. DNS alias or NAT):
+# web1 ansible_host=192.168.1.10
+# web2 ansible_host=192.168.1.11
+#
+# [dbservers]
+# db1 ansible_host=192.168.1.20
+#
+# Meta-group = groups of groups; `hosts: servers` then matches both tiers:
+# [all_servers:children]
+# webservers
+# dbservers
+#
+# Connection overrides live on the host line itself:
+# web3 ansible_host=10.0.0.5 ansible_port=2222 ansible_user=deploy \
+#      ansible_python_interpreter=/usr/bin/python3
+

@@ -1,0 +1,29 @@
+---
+# =============================================================================
+# roles/webserver/meta/main.yml - Galaxy metadata + DEPENDENCIES
+# -----------------------------------------------------------------------------
+# dependencies: roles that must run BEFORE this one. When you request
+# 'webserver', Ansible quietly inserts 'common' in front of it - you never
+# have to remember the bootstrap order yourself.
+# (Deep/recursive: common's own dependencies would run first too.)
+# =============================================================================
+galaxy_info:
+  role_name: webserver
+  author: ansible-hands-on
+  description: Installs and configures a web server with a demo page.
+  license: MIT
+  min_ansible_version: "2.14"
+
+  platforms:
+    - name: Ubuntu
+      versions: [jammy, noble]
+    - name: Debian
+      versions: [bullseye, bookworm]
+    - name: EL
+      versions: ["8", "9"]
+
+  galaxy_tags: [web, nginx, http]
+
+dependencies:
+  # Static dependency: always applied when webserver is applied.
+  - role: common

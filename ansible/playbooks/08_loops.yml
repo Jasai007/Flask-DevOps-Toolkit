@@ -1,0 +1,35 @@
+---
+# =============================================================================
+# Playbook 08: LOOPS - repeat a task without copy-pasting it
+# -----------------------------------------------------------------------------
+# WHY:  Creating three users with three hand-written tasks means three edits
+#       when user #4 arrives. A loop keeps the list of NAMES and the LOGIC
+#       separate - change data, not code.
+#
+# RUN:  ansible-playbook playbooks/08_loops.yml
+#       ansible-playbook playbooks/08_loops.yml -e '{"users":["alice"]}'
+#       ansible-playbook playbooks/08_loops.yml -v    # shows each item
+#
+# OUTPUT: one result PER ITEM inside a single task (item=developer, ...).
+#
+# LEARNS: loop + item, looping over lists, where loops fit with Jinja
+#         filters (playbook 15 shows selectattr/map chains over lists).
+# =============================================================================
+- name: Work with loops
+  hosts: local
+  become: true                     # the user module needs root
+  vars:
+    users:
+      - developer
+      - tester
+      - deployer
+  tasks:
+    - name: Create users
+      ansible.builtin.user:
+        name: "{{ item }}"         # 'item' = the current element of the loop
+        state: present
+      loop: "{{ users }}"          # a LIST (also works: range, dict2items...)
+      # ALTERNATIVE loop styles you will meet in the wild:
+      #   loop: "{{ range(5) | list }}"            # numbered loop
+      #   with_items: "{{ users }}"                # legacy syntax - avoid
+      #   loop: "{{ ports | dict2items }}"         # dictionaries -> key/value

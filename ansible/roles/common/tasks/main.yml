@@ -1,0 +1,56 @@
+---
+# =============================================================================
+# roles/common/tasks/main.yml - baseline applied to EVERY managed node
+# -----------------------------------------------------------------------------
+# WHAT IT DOES, in order (order matters - users before directories that
+# they own, directories before anything written into them):
+#   1. load OS-specific vars (Debian.yml / RedHat.yml / default.yml)
+#   2. ensure application group + user exist
+#   3. ensure the application base directory exists
+#   4. install baseline packages (list decided by the OS)
+#
+# RUN standalone:   ansible-playbook -i localhost, -c local roles/common/tests/test.yml
+# As part of a play: see playbooks/18_roles.yml
+# =============================================================================
+- name: Load OS-specific variables (Debian.yml / RedHat.yml / fallback)
+  ansible.builtin.include_vars: "{{ lookup('first_found', os_var_files) }}"
+  vars:
+    os_var_files:
+      files:
+        # ansible_os_family is a fact gathered at play start. The default()
+        # filter keeps this task working even with gather_facts: false.
+        - "{{ ansible_os_family | default('default') }}.yml"
+        - default.yml            # safety net - always resolvable
+      paths:
+        - "{{ role_path }}/vars" # absolute path of THIS role's vars/ folder
+
+- name: Ensure the application group exists
+  ansible.builtin.group:
+    name: "{{ app_group }}"
+    state: present
+  become: true
+
+- name: Ensure the application user exists
+  ansible.builtin.user:
+    name: "{{ app_user }}"
+    group: "{{ app_group }}"
+    state: present
+    create_home: false           # service accounts do not need a home dir
+  become: true
+
+- name: Ensure the application base directory exists
+  ansible.builtin.file:
+    path: "{{ app_base_dir }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: '0755'
+  become: true
+
+- name: Install baseline packages (list comes from the OS-specific vars file)
+  ansible.builtin.package:
+    # List concatenation: OS defaults + whatever the operator added via
+    #   -e "common_packages_extra=[git,rsync]"
+    name: "{{ common_packages + common_packages_extra }}"
+    state: present
+  become: true

@@ -1,0 +1,66 @@
+---
+# =============================================================================
+# Playbook 22: SELF TEST - verify the environment WITHOUT root privileges
+# -----------------------------------------------------------------------------
+# WHY: before applying real configuration you want a 5-second "is my tooling
+#      healthy?" check: connectivity, inventory vars, vault access, filters.
+#      This is the first thing site.yml runs, and it is safe everywhere
+#      (localhost, no sudo, no state changes).
+#
+# RUN:  ansible-playbook playbooks/22_selftest.yml
+#       ansible-playbook site.yml --tags validate     # same, via site.yml
+#       bash scripts/validate.sh                      # the script version
+#
+# LEARNS: ansible.builtin.ping (module transport test), assert as living
+#         documentation of expectations, tags at play level.
+# =============================================================================
+- name: Project self test
+  hosts: local
+  gather_facts: false
+  tags: [validate]          # play-level tag -> every task below inherits it
+
+  tasks:
+    # ping does NOT send ICMP - it copies a tiny module to the target and
+    # runs it. Green ping = inventory + connection + interpreter all work.
+    - name: Module transport works (ansible.builtin.ping)
+      ansible.builtin.ping:
+
+    - name: Inventory variables are visible
+      ansible.builtin.assert:
+        that:
+          - environment is defined          # from inventory/group_vars/all.yml
+          - host_role is defined            # from inventory/host_vars/localhost.yml
+        success_msg: "inventory/group_vars + host_vars loaded correctly"
+        fail_msg: "group_vars/host_vars missing - is env.sh / ansible.cfg loaded?"
+
+    - name: Core tools are usable (python3 present for local connections)
+      ansible.builtin.command: python3 --version
+      register: python_check
+      changed_when: false
+
+    - name: Temporary directory is writable (spot check)
+      ansible.builtin.stat:
+        path: /tmp
+      register: tmp_stat
+
+    - name: Vault demo material is present
+      ansible.builtin.stat:
+        # NOTE: module paths are resolved on the TARGET (its working dir),
+        # NOT relative to this playbook - always anchor with playbook_dir:
+        path: "{{ playbook_dir }}/../{{ item }}"
+      loop:
+        - vault/secrets.yml            # encrypted, committed
+        - scripts/vault_pass_demo.txt  # demo password, committed on purpose
+      register: vault_files
+
+    - name: Assert required project files exist
+      ansible.builtin.assert:
+        that:
+          - tmp_stat.stat.exists
+          - vault_files.results[0].stat.exists
+          - vault_files.results[1].stat.exists
+        success_msg: "Self test passed - environment looks healthy."
+
+    - name: Where to go next
+      ansible.builtin.debug:
+        msg: "Run 'bash scripts/doctor.sh' for a full environment diagnosis."

@@ -1,0 +1,30 @@
+---
+# =============================================================================
+# Playbook 05: FILE/COPY MODULE - ship files + DRY RUN with --check --diff
+# -----------------------------------------------------------------------------
+# WHY:  Deploying configuration files is bread-and-butter work. The copy
+#       module compares content/permissions and only transfers on difference.
+#
+# RUN:  ansible-playbook playbooks/05_copy_files.yml
+#       ansible-playbook --check --diff playbooks/05_copy_files.yml
+#               #  --check = make NO changes, just report what WOULD happen
+#               #  --diff  = also show the actual content difference
+#       # Make it fail on purpose: edit /tmp/sample.txt, then re-run --check.
+#
+# LEARNS: copy module, src/dest, mode as a QUOTED string, playbook-relative
+#         paths, check + diff mode (your safety harness for every future run).
+# =============================================================================
+- name: Work with files
+  hosts: local
+  become: true                     # writing to /tmp as root-owned is fine here
+  tasks:
+    - name: Copy sample file
+      ansible.builtin.copy:
+        # Paths in src are relative to THIS playbook file, so ../files
+        # walks up from playbooks/ to the project's files/ directory:
+        src: ../files/sample.txt
+        dest: /tmp/sample.txt
+        mode: '0644'               # QUOTED on purpose: a bare 0644 is an
+                                    # integer in YAML and would be converted
+                                    # with surprising base semantics.
+                                    # '0644' is an unambiguous permission string.

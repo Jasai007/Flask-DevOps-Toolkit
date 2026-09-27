@@ -1,0 +1,58 @@
+---
+# =============================================================================
+# .yamllint.yml - YAML style rules for this project
+# =============================================================================
+# Run:  yamllint -c .yamllint.yml .
+# (config file is auto-discovered from the project root when named .yamllint.yml)
+# =============================================================================
+extends: default          # start from yamllint's built-in rule set
+
+# Files we do not want checked.
+# IMPORTANT: inside this block scalar every character is PART OF THE PATH -
+# do not put comments after the paths, they break the match!
+ignore: |
+  .kilo
+  vault/secrets.yml
+
+rules:
+  # Every file starts with '---' (document start) - makes multi-doc files
+  # unambiguous and is the Ansible community style.
+  document-start:
+    present: true
+
+  # Long playbook header comment lines can run long; allow a generous limit.
+  line-length:
+    max: 120
+    level: warning       # warn instead of fail - keep readable, not brittle
+
+  # Our style: '# text' with a single space after '#'.
+  comments:
+    min-spaces-from-content: 1
+    require-starting-space: true
+
+  # Header comment blocks are intentionally flush-left (column 0) above the
+  # code they describe, so do not enforce 'comment must match next line indent'.
+  comments-indentation: disable
+
+  # Booleans must be lowercase true/false (YAML 1.1 accepts yes/no/on/off -
+  # Ansible treats them as strings in some places, so we avoid them).
+  # check-keys: false -> YAML 1.1 reads the key `on:` (GitHub Actions
+  # triggers!) as boolean true, which would otherwise be flagged forever.
+  truthy:
+    allowed-values: ['true', 'false']
+    check-keys: false
+
+  # Allow small inline maps/lists like:  tags: [setup, config]
+  braces:
+    max-spaces-inside: 1
+
+  colons:
+    max-spaces-before: 0   # 'key:value' without space is an error
+
+  # Trailing spaces at end of line are noise in git diffs.
+  trailing-spaces:
+    level: warning
+
+  indentation:
+    spaces: consistent
+    indent-sequences: consistent   # accept both '- item' and '-   item' styles

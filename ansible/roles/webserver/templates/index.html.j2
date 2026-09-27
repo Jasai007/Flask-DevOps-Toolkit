@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<!--
+  Rendered by role: roles/webserver/templates/index.html.j2
+  Template -> file module -> Jinja2 rendering on the CONTROL node ->
+  result copied to the target. Only changed files trigger handlers.
+-->
+<html>
+<head><title>{{ app_name }}</title></head>
+<body>
+<h1>Welcome to {{ app_name }}</h1>
+<p>Listening on port {{ webserver_port }}</p>
+<p>Served by {{ webserver_package }} on {{ ansible_facts['hostname'] | default('this host') }}</p>
+<p>Environment: {{ environment | default('unset') }}</p>
+<p>Managed by Ansible role <strong>webserver</strong>.</p>
+</body>
+</html>

@@ -1,0 +1,80 @@
+---
+# =============================================================================
+# Playbook 20: COLLECTIONS - use modules and filters that are NOT builtin
+# -----------------------------------------------------------------------------
+# ROLES vs COLLECTIONS (the difference everyone mixes up):
+#   role       = reusable PLAYBOOK logic (tasks/handlers/templates)
+#   collection = packaging FORMAT for plugins (modules, filters, lookups,
+#                roles...) under one namespace + one version: <ns>.<name>.*
+#
+# FQCN RULE: always name plugins fully qualified -
+#   ansible.builtin.debug   <- builtin, always available
+#   local.demo.human_size   <- OUR collection (./collections, committed)
+#   community.general.x     <- from Galaxy (ansible-galaxy install -r ...)
+#
+# PREREQ: collections_path must be loaded (ansible.cfg, or `source
+#        scripts/env.sh` on world-writable dirs like /mnt/<drive> in WSL).
+#
+# RUN:  source scripts/env.sh
+#       ansible-playbook playbooks/20_collections.yml
+#       ansible-playbook playbooks/20_collections.yml --check   # module is
+#                                       # read-only -> safe to check-run
+#       ansible-doc local.demo.host_summary      # our own plugin's docs!
+#       ansible localhost -i inventory/hosts -m local.demo.host_summary
+#
+# LEARNS: FQCN addressing, custom modules, custom filters, register results
+#         from non-builtin modules, where plugins are discovered from.
+# =============================================================================
+- name: Use the local.demo collection (custom module + custom filter)
+  hosts: local
+  tasks:
+    # ---------------------------------------------------------------------
+    # Custom MODULE: runs Python on the target, returns structured data.
+    # The module source is collections/ansible_collections/local/demo/
+    #                         plugins/modules/host_summary.py
+    # ---------------------------------------------------------------------
+    - name: Collect a host summary via our custom module
+      local.demo.host_summary: {}      # {} = module takes no arguments
+      register: host_summary_result
+
+    - name: Show selected fields from the module result
+      ansible.builtin.debug:
+        msg:
+          hostname: "{{ host_summary_result.summary.hostname }}"
+          system: "{{ host_summary_result.summary.system }}"
+          python: "{{ host_summary_result.summary.python_version }}"
+          user: "{{ host_summary_result.summary.user }}"
+          cpus: "{{ host_summary_result.summary.cpu_count }}"
+          changed_flag: "{{ host_summary_result.changed }}"   # -> false
+
+    # ---------------------------------------------------------------------
+    # Custom FILTER: transforms a value inside Jinja, FQCN on the right of |.
+    # Source: collections/ansible_collections/local/demo/plugins/filter/
+    #         human_size.py
+    # ---------------------------------------------------------------------
+    - name: Convert byte counts to readable strings with our filter
+      ansible.builtin.debug:
+        msg:
+          decimal_si: "{{ 1536000 | local.demo.human_size }}"            # 1.5 MB
+          binary_iec: "{{ 1536000 | local.demo.human_size(binary=true) }}"  # 1.5 MiB
+          tiny: "{{ 999 | local.demo.human_size }}"                      # 999.0 B
+          custom_precision: "{{ 1536000 | local.demo.human_size(precision=2) }}"
+
+    # ---------------------------------------------------------------------
+    # Sanity check combining module result + filter.
+    # ---------------------------------------------------------------------
+    - name: Assert the module produced the data we expect
+      ansible.builtin.assert:
+        that:
+          - host_summary_result.summary.hostname | length > 0
+          - host_summary_result.changed == false
+          - (1024 | local.demo.human_size(binary=true)) == '1.0 KiB'
+        success_msg: "local.demo collection works end-to-end (module + filter)."
+
+    # ---------------------------------------------------------------------
+    # FOR REFERENCE (needs: ansible-galaxy install -r requirements.yml):
+    #   - community.general.timezone:
+    #       name: Europe/Berlin        # module from a Galaxy collection
+    #   - ansible.posix.mount:          # module from ansible.posix
+    # Replace no-args examples above if you want to try them.
+    # ---------------------------------------------------------------------

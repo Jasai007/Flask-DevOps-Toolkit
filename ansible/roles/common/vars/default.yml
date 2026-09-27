@@ -1,0 +1,7 @@
+---
+# =============================================================================
+# roles/common/vars/default.yml - FALLBACK used when ansible_os_family is
+# unknown (or facts were not gathered). Keeps the role from crashing on
+# exotic platforms - just install nothing OS-specific by default.
+# =============================================================================
+common_packages: []

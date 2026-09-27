@@ -1,0 +1,48 @@
+# =============================================================================
+# inventory/hosts.example - TEMPLATE for real (remote) hosts
+# -----------------------------------------------------------------------------
+# Copy over inventory/hosts when you are ready to leave localhost-only land:
+#     cp inventory/hosts.example inventory/hosts
+# Then fill in real IPs/hostnames and enable SSH access.
+#
+# PATTERNS - host patterns select machines in playbooks:
+#     hosts: all          every host in the inventory
+#     hosts: webservers   the [webservers] group
+#     hosts: 'web1'       one host by name
+#     hosts: 'webservers:dbservers'      union of groups (':' = OR)
+#     hosts: 'webservers:&dbservers'     intersection ('&' = AND)
+#     hosts: 'webservers:!db1'           exclusion ('!' = NOT)
+# =============================================================================
+
+# --- Groups (one section per group) ------------------------------------------
+[local]
+localhost ansible_connection=local        # connection=local -> no SSH needed
+
+[webservers]
+# ansible_host = the address Ansible actually connects to (when it differs
+# from the inventory hostname, e.g. behind NAT or DNS aliases)
+web1 ansible_host=192.168.1.10
+web2 ansible_host=192.168.1.11
+
+[dbservers]
+db1 ansible_host=192.168.1.20
+db1_backup ansible_host=192.168.1.21
+
+# --- Meta-groups (children = groups of groups) --------------------------------
+[servers:children]
+webservers
+dbservers
+
+# --- Group variables ----------------------------------------------------------
+# These live INLINE here for teaching; in real projects prefer the files in
+# inventory/group_vars/<group>.yml (same effect, easier to read/diff).
+[webservers:vars]
+web_service=nginx
+
+[dbservers:vars]
+db_service=postgresql
+
+# --- Per-host connection settings (examples) ----------------------------------
+# [webservers]
+# web3 ansible_host=10.0.0.5 ansible_port=2222 ansible_user=deploy \
+#      ansible_python_interpreter=/usr/bin/python3 ansible_become=true

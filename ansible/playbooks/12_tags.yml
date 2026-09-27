@@ -1,0 +1,61 @@
+---
+# =============================================================================
+# Playbook 12: TAGS - run only the part of a playbook you care about
+# -----------------------------------------------------------------------------
+# WHY:  Real playbooks have hundreds of tasks. Tags let you run a subset
+#       instead of splitting the playbook into many small files.
+#
+# RUN:  ansible-playbook playbooks/12_tags.yml                  # everything
+#       ansible-playbook playbooks/12_tags.yml --tags setup     # only 'setup'
+#       ansible-playbook playbooks/12_tags.yml --tags config,cleanup
+#       ansible-playbook playbooks/12_tags.yml --skip-tags cleanup
+#       ansible-playbook playbooks/12_tags.yml --list-tags      # show all tags
+#       ansible-playbook playbooks/12_tags.yml --list-tasks     # show all tasks
+#
+# NOTE: Tags have dependencies! On a clean machine, running ONLY
+#       --tags config fails because 'setup' (the directory) never ran.
+#       Real life works the same way - run setup first, then config.
+#
+# LEARNS: task tags, play-level tags (inherited by every task),
+#         the special 'always' tag, comma-separated tag lists.
+# =============================================================================
+- name: Demonstrate tags
+  hosts: local
+  become: true
+
+  # Play-level tags are inherited by EVERY task inside this play.
+  tags:
+    - demo
+
+  tasks:
+    - name: "Step 1 - prepare a demo directory (tag: setup)"
+      ansible.builtin.file:
+        path: /tmp/ansible-tags-demo
+        state: directory
+        mode: '0755'
+      tags:
+        - setup
+
+    - name: "Step 2 - drop a config file (tag: config)"
+      ansible.builtin.copy:
+        dest: /tmp/ansible-tags-demo/app.conf
+        # 'environment' comes from inventory/group_vars/all.yml - proving
+        # group variables are visible to every play in the project.
+        content: |
+          # written by playbooks/12_tags.yml
+          environment={{ environment }}
+        mode: '0644'
+      tags: [config]          # short list syntax - identical to the block above
+
+    - name: "Step 3 - remove the demo directory (tag: cleanup)"
+      ansible.builtin.file:
+        path: /tmp/ansible-tags-demo
+        state: absent
+      tags:
+        - cleanup
+
+    - name: The 'always' tag runs even when other tags are filtered out
+      ansible.builtin.debug:
+        msg: "This task carries tag 'always', so it prints in EVERY tagged run."
+      tags:
+        - always

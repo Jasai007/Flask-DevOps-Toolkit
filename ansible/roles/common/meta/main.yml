@@ -1,0 +1,28 @@
+---
+# =============================================================================
+# roles/common/meta/main.yml - Galaxy metadata + role dependencies
+# -----------------------------------------------------------------------------
+# This file is what makes a role PUBLISHABLE:
+#   * `ansible-galaxy role init` generates it
+#   * galaxy.ansible.com displays it
+#   * ansible-lint checks it for completeness
+# =============================================================================
+galaxy_info:
+  role_name: common           # lowercase + underscores (Galaxy naming rule)
+  author: ansible-hands-on
+  description: Baseline user, directories and packages for every node.
+  license: MIT
+  min_ansible_version: "2.14" # oldest ansible-core this role supports
+
+  # Platforms allow Galaxy to warn users about unsupported targets.
+  platforms:
+    - name: Ubuntu
+      versions: [jammy, noble]
+    - name: Debian
+      versions: [bullseye, bookworm]
+    - name: EL
+      versions: ["8", "9"]
+
+  galaxy_tags: [baseline, bootstrap, common]
+
+dependencies: []              # this role depends on nothing

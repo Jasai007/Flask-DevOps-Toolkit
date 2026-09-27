@@ -1,0 +1,28 @@
+---
+# =============================================================================
+# Playbook 06: VARIABLES - parameterise everything
+# -----------------------------------------------------------------------------
+# WHY:  Hard-coded values create one-off playbooks. Variables turn automation
+#       into a reusable template: same tasks, different sites/ports/users.
+#
+# RUN:  ansible-playbook playbooks/06_variables.yml                # play vars
+#       ansible-playbook playbooks/06_variables.yml -e app_port=9090
+#               # -e (extra vars) has the HIGHEST priority of all sources
+#       ansible-inventory --list | less      # see inventory-sourced variables
+#
+# VARIABLE PRIORITY (highest wins):
+#   -e extra vars > play vars (below) > inventory group_vars/host_vars
+#   > role defaults        (full list: docs/roles.md)
+#
+# LEARNS: play-level vars, Jinja2 {{ expressions }}, overriding with -e.
+# =============================================================================
+- name: Work with variables
+  hosts: local
+  vars:
+    app_name: my_application   # play vars: visible to EVERY task in this play
+    app_port: 8080             # override from CLI: -e app_port=9090
+  tasks:
+    - name: Display application information
+      ansible.builtin.debug:
+        # {{ ... }} is a Jinja2 expression, evaluated per host at run time:
+        msg: "Application {{ app_name }} runs on port {{ app_port }}"

@@ -1,0 +1,26 @@
+---
+# =============================================================================
+# Playbook 04: SERVICE MODULE - keep daemons running (and boot-persistent)
+# -----------------------------------------------------------------------------
+# WHY:  Starting a service by hand works once; Ansible guarantees the state
+#       forever, on every host, on every run - including after reboots.
+#
+# RUN:  ansible-playbook playbooks/04_manage_service.yml
+#       ansible-playbook --check playbooks/04_manage_service.yml
+#
+# NOTE: state and enabled answer TWO different questions:
+#         state:   "is it running RIGHT NOW?"        (start/stop now)
+#         enabled: "will it start after a REBOOT?"   (systemctl enable)
+#       Restarting on config change belongs to HANDLERS - playbook 09.
+#
+# LEARNS: service module, started/stopped, enabled/disabled, idempotence.
+# =============================================================================
+- name: Manage a service
+  hosts: local
+  become: true                     # systemctl requires root
+  tasks:
+    - name: Make sure nginx is running
+      ansible.builtin.service:
+        name: nginx
+        state: started             # running at this moment (start if not)
+        enabled: true              # also start automatically at boot

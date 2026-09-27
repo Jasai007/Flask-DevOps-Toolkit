@@ -1,0 +1,70 @@
+---
+# =============================================================================
+# Playbook 14: ERROR HANDLING - decide YOURSELF what counts as failure/change
+# -----------------------------------------------------------------------------
+# WHY:  Modules guess success from exit codes. Real life is messier:
+#       grep rc=1 means "no match" (not an error), a probe should retry
+#       before giving up, and read-only commands should not claim "changed".
+#
+# RUN:  ansible-playbook playbooks/14_error_handling.yml
+#       ansible-playbook playbooks/14_error_handling.yml -v
+#
+# OUTPUT TO WATCH FOR: one task shows "failed=1 ... ignored=1" in PLAY RECAP,
+# everything else is ok - the play still completes.
+#
+# LEARNS: failed_when (custom failure rule), changed_when (honest change
+#         reporting), ignore_errors (continue anyway), retries/until
+#         (retry until a condition becomes true).
+# =============================================================================
+- name: Demonstrate failure and change control
+  hosts: local
+  tasks:
+    # ---------------------------------------------------------------------
+    # 1) changed_when - the command module ALWAYS reports "changed".
+    #    When a task only READS state, tell the truth instead.
+    # ---------------------------------------------------------------------
+    - name: Read the kernel name without claiming a change
+      ansible.builtin.command: uname -s
+      register: kernel
+      changed_when: false          # reading state is NOT a change
+
+    - name: Show what uname returned
+      ansible.builtin.debug:
+        msg: "Kernel = {{ kernel.stdout }}"
+
+    # ---------------------------------------------------------------------
+    # 2) failed_when - override the module's own failure rule.
+    #    grep exit codes: 0 = found, 1 = not found (acceptable here),
+    #                      2 = real error (file missing, bad syntax...).
+    # ---------------------------------------------------------------------
+    - name: Treat grep 'no match' as success - only rc >= 2 is a real error
+      ansible.builtin.command: grep -q definitely-not-present-xyz /etc/hostname
+      register: grep_out
+      changed_when: false
+      failed_when: grep_out.rc > 1     # rc=1 (no match) must NOT fail
+
+    # ---------------------------------------------------------------------
+    # 3) ignore_errors - show the failure but keep the play going.
+    #    (Prefer block/rescue - playbook 13 - for real recovery logic.)
+    # ---------------------------------------------------------------------
+    - name: A command that fails but must not stop the playbook
+      ansible.builtin.command: cat /no/such/file/at/all
+      ignore_errors: true              # PLAY RECAP will show ignored=1
+
+    # ---------------------------------------------------------------------
+    # 4) retries / until - try again until the condition becomes true.
+    #    Typical use: wait for a service/API to come up after a restart.
+    # ---------------------------------------------------------------------
+    - name: Retry a probe until its condition is satisfied
+      ansible.builtin.command: date +%S
+      register: seconds_probe
+      changed_when: false
+      until: seconds_probe.stdout | length > 0   # condition that must be true
+      retries: 3                       # maximum attempts
+      delay: 1                         # seconds to wait between attempts
+
+    - name: Summary
+      ansible.builtin.debug:
+        msg: >-
+          failed_when, changed_when, ignore_errors and retries/until
+          all demonstrated - inspect each task result above.

@@ -1,0 +1,56 @@
+{
+  "_readme": "DATA FILE for inventory.py - edit this, not the Python. Structure: hosts = per-host vars (become _meta.hostvars); groups = membership + group vars (ansible merges group vars onto member hosts automatically); common_vars = merged into EVERY host. JSON has no comments - explanations live in inventory/dynamic/README.md.",
+
+  "common_vars": {
+    "managed_by": "dynamic inventory",
+    "inventory_source": "inventory/dynamic/hosts.json"
+  },
+
+  "hosts": {
+    "localhost": {
+      "ansible_connection": "local",
+      "role": "control-node"
+    },
+    "web1": {
+      "ansible_host": "192.168.1.10",
+      "role": "web"
+    },
+    "web2": {
+      "ansible_host": "192.168.1.11",
+      "role": "web"
+    },
+    "db1": {
+      "ansible_host": "192.168.1.20",
+      "role": "database"
+    }
+  },
+
+  "groups": {
+    "local": {
+      "hosts": ["localhost"],
+      "vars": {
+        "environment": "dynamic-lab"
+      }
+    },
+    "webservers": {
+      "hosts": ["web1", "web2"],
+      "vars": {
+        "web_port": 80,
+        "web_role_tier": "frontend"
+      }
+    },
+    "dbservers": {
+      "hosts": ["db1"],
+      "vars": {
+        "db_port": 5432,
+        "db_role_tier": "backend"
+      }
+    },
+    "all_servers": {
+      "children": ["webservers", "dbservers"],
+      "vars": {
+        "backup_enabled": true
+      }
+    }
+  }
+}

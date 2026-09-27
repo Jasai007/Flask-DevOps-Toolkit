@@ -1,0 +1,47 @@
+---
+# =============================================================================
+# playbooks/pull.yml - ANSIBLE PULL mode (the node configures ITSELF)
+# -----------------------------------------------------------------------------
+# PUSH vs PULL:
+#   push (default): you run ansible-playbook -> it reaches OUT to hosts.
+#   pull           : each host runs `ansible-pull` -> it fetches THIS repo
+#                    from git and applies the playbook LOCALLY.
+#
+# WHY PULL? no inbound reachability needed (NAT/firewalls), no central
+#   control node to keep alive, scales with the fleet itself.
+#
+# HOW TO USE (on the target machine, e.g. via cloud-init or cron):
+#   ansible-pull -U https://github.com/YOUR_ORG/YOUR_REPO.git \
+#                -d /opt/ansible \
+#                --vault-password-file /etc/ansible/vault.pass \
+#                site.yml
+#
+# CRON (self-configuring nodes re-sync forever):
+#   */15 * * * * ansible-pull -U <git-url> -d /opt/ansible site.yml >/dev/null 2>&1
+#
+# SAFETY: pull only trusts ONE git remote, and the repo must be idempotent -
+#   re-applying it every 15 minutes must be a no-op when nothing changed.
+#
+# LEARNS: pull architecture, stamping last-run state, trust boundary.
+# =============================================================================
+- name: Ansible pull - node applies its own configuration
+  hosts: local
+  become: true
+  gather_facts: true        # for ansible_date_time below
+
+  tasks:
+    - name: Stamp when this node last pulled its configuration
+      ansible.builtin.copy:
+        # Written on the TARGET - proof of when configuration was last sync'd.
+        # monitoring/alerting can alert if this file gets old.
+        dest: /tmp/ansible-pull-stamp
+        content: |
+          last_pull={{ ansible_date_time.iso8601 }}
+          pulled_by={{ ansible_user_id | default('unknown') }}
+        mode: '0644'
+
+    - name: Confirm baseline role is applied by pull too
+      ansible.builtin.debug:
+        msg: >-
+          In real life this play (or site.yml) would import the same roles
+          as push mode - pull only changes WHO starts the run.

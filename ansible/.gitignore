@@ -1,0 +1,33 @@
+# Ansible failure-retry files (legacy; we disable them in ansible.cfg too)
+*.retry
+
+# Python
+__pycache__/
+*.pyc
+
+# Logs & local env
+*.log
+.env
+.vsix/
+
+# Editors
+.vscode/
+.idea/
+
+# Ansible local caches/artifacts created while running
+.ansible/
+.cache/
+
+# Built collection tarballs (regenerate anytime: bash scripts/galaxy.sh build)
+collections/**/*.tar.gz
+
+# -----------------------------------------------------------------------------
+# SECRETS - never commit real ones.
+# vault/secrets.yml IS committed but ENCRYPTED by ansible-vault.
+# Decrypted copies and real password files must stay out:
+# -----------------------------------------------------------------------------
+vault/*.decrypted
+vault_pass.txt
+.vault_pass
+# (scripts/vault_pass_demo.txt is a deliberately public DEMO password for
+#  this learning project only - see vault/README.md)

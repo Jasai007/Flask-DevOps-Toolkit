@@ -1,0 +1,43 @@
+---
+# =============================================================================
+# Playbook 18: ROLES - the standard way to package reusable automation
+# -----------------------------------------------------------------------------
+# WHY:  A playbook that grows past ~100 lines becomes unmaintainable. Roles
+#       split automation into a fixed folder structure (tasks/handlers/
+#       templates/vars/defaults/meta) that anyone can reuse and publish.
+#
+# PROJECT ROLES:
+#   roles/common/     -> baseline: packages, user, directories (no deps)
+#   roles/webserver/  -> nginx + page; DEPENDS on common (see its meta/)
+#
+# RUN:  ansible-playbook playbooks/18_roles.yml                 # both roles
+#       ansible-playbook playbooks/18_roles.yml --tags webserver
+#       ansible-playbook playbooks/18_roles.yml -e app_user=alice   # override
+#       ansible-playbook playbooks/18_roles.yml --list-tasks        # inspect
+#       ansible-playbook playbooks/18_roles.yml --start-at-task 'Install...'
+#
+# HOW ROLES RESOLVE (ansible.cfg sets roles_path = ./roles:~/.ansible/roles):
+#   1. ./roles/<name>           <- shipped with this project
+#   2. ~/.ansible/roles/<name>  <- installed by ansible-galaxy
+#
+# NOTES:
+#   * Static 'roles:' entries run in ORDER, top to bottom.
+#   * webserver's meta/main.yml lists 'common' as a dependency, so common
+#     runs even if you only ask for webserver.
+#   * Tags on a role entry tag EVERY task inside that role.
+#   * NO play-level become here: every task inside the roles carries its own
+#     `become: true` (roles must be self-contained). Keeping become off the
+#     play means fact gathering runs unprivileged - so
+#     `ansible-playbook site.yml --tags validate` works WITHOUT sudo.
+#
+# LEARNS: roles keyword, ordering, dependencies, defaults vs -e overrides.
+# =============================================================================
+- name: Apply baseline and web server roles
+  hosts: local
+  roles:
+    # 'role:' mapping form lets us attach tags/when to the whole role.
+    - role: common
+      tags: [common]
+
+    - role: webserver
+      tags: [webserver]

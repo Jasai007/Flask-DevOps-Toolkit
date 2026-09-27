@@ -1,0 +1,71 @@
+---
+# =============================================================================
+# Playbook 17: ADVANCED EXECUTION CONTROL - delegate_to, run_once, serial...
+# -----------------------------------------------------------------------------
+# WHY:  These keywords control WHERE and HOW OFTEN tasks run - the difference
+#       between a toy playbook and one that safely manages a fleet.
+#
+# RUN:  ansible-playbook playbooks/17_advanced_execution.yml
+#       ansible-playbook playbooks/17_advanced_execution.yml --check --diff
+#       ansible-playbook playbooks/17_advanced_execution.yml --list-hosts
+#
+# LEARNS: delegate_to (run somewhere else), run_once (first host only),
+#         serial (rolling batches), throttle (cap concurrency),
+#         check_mode override, gather_facts on/off.
+# =============================================================================
+- name: Demonstrate execution control
+  hosts: local
+
+  # serial is a PLAY keyword: process the matched hosts in batches.
+  # Against a fleet:  serial: 2  -> deploy 2 hosts, verify, next 2...
+  # (With a single-host inventory the effect is invisible, but this is the
+  #  exact syntax used for rolling updates / canary deployments.)
+  serial: 1
+
+  gather_facts: true        # set false to skip fact gathering (faster runs)
+
+  tasks:
+    # ---------------------------------------------------------------------
+    # delegate_to: execute this task on ANOTHER machine, but keep the result
+    # attached to the current play/host. Real uses: query a database that is
+    # only reachable from the control node, or hit an internal load balancer
+    # that the target hosts cannot see.
+    # ---------------------------------------------------------------------
+    - name: Run a command on the delegated host instead of the target
+      ansible.builtin.command: hostname
+      delegate_to: localhost
+      changed_when: false
+      register: delegated_hostname
+
+    - name: Show the delegated result
+      ansible.builtin.debug:
+        msg: "Task actually ran on -> {{ delegated_hostname.stdout }}"
+
+    # ---------------------------------------------------------------------
+    # run_once: execute on the FIRST host of the batch only. Typical uses:
+    # pull a shared artifact once, flush a load balancer once, log in to a
+    # container registry once.
+    # ---------------------------------------------------------------------
+    - name: Runs on one host per batch only
+      ansible.builtin.debug:
+        msg: "run_once demo - with a single-host inventory it looks ordinary."
+      run_once: true
+
+    # ---------------------------------------------------------------------
+    # throttle: hard cap on how many hosts execute this task SIMULTANEOUSLY.
+    # Useful to protect fragile services (max 5 restarts at a time).
+    # ---------------------------------------------------------------------
+    - name: Throttled task (at most 1 at a time)
+      ansible.builtin.command: date +%T
+      changed_when: false
+      throttle: 1
+
+    # ---------------------------------------------------------------------
+    # check_mode override: with --check, tasks are normally NOT executed.
+    # check_mode: false forces this one task to run anyway (use ONLY for
+    # harmless/read-only probes you always want to execute).
+    # ---------------------------------------------------------------------
+    - name: Executes even during a --check (dry run) pass
+      ansible.builtin.command: echo "this runs even in check mode"
+      check_mode: false
+      changed_when: false

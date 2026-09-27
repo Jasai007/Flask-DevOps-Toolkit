@@ -1,0 +1,38 @@
+---
+# =============================================================================
+# Playbook 10: TEMPLATES - Jinja2 files with variables baked in
+# -----------------------------------------------------------------------------
+# WHY:  Static files (copy) cannot vary per host/site. A template renders ON
+#       THE CONTROL NODE with each host's variables, then ships the result.
+#       Same file -> different output per host.
+#
+# RUN:  ansible-playbook playbooks/10_template.yml
+#       ansible-playbook --check --diff playbooks/10_template.yml
+#       cat /var/www/html/index.html          # inspect the rendered result
+#       # Then change app_port above and re-run with --diff to see the delta.
+#
+# RENDER PIPELINE:
+#   templates/index.html.j2 + {{ app_name }}/{{ app_port }}
+#        -> rendered on the CONTROL node (Jinja2)
+#        -> compared with the file on the target
+#        -> transferred only if different
+#
+# LEARNS: template module, .j2 convention, template vs copy, playbook-
+#         relative paths (../templates/...).
+# =============================================================================
+- name: Work with templates
+  hosts: local
+  become: true
+  vars:
+    app_name: Ansible Demo      # consumed inside the .j2 file
+    app_port: 8080
+  tasks:
+    - name: Deploy HTML template
+      ansible.builtin.template:
+        # playbook-relative: playbooks/ -> ../templates/index.html.j2
+        src: ../templates/index.html.j2
+        dest: /var/www/html/index.html
+        mode: '0644'
+        # TIP: add 'backup: true' to keep a timestamped copy of the old file,
+        #      and run with --diff to SEE what your Jinja changes produce
+        #      before anything is written.

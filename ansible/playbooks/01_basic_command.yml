@@ -1,0 +1,36 @@
+---
+# =============================================================================
+# Playbook 01: BASIC COMMANDS - your first playbook (ad-hoc -> structured)
+# -----------------------------------------------------------------------------
+# WHY:  An ad-hoc command (`ansible local -m command -a 'date'`) is a one-off
+#       you cannot review or share. A playbook records the same work in order,
+#       in git, for anyone to re-run. This is the smallest possible playbook.
+#
+# RUN:  ansible-playbook playbooks/01_basic_command.yml
+#       ansible-playbook playbooks/01_basic_command.yml -v     # more detail
+#       ansible-playbook --list-tasks playbooks/01_basic_command.yml
+#
+# OUTPUT TO WATCH FOR: three tasks, all reported "changed" - the command
+# module ALWAYS claims a change (it cannot know better). Playbook 14 fixes
+# this with changed_when.
+#
+# LEARNS: play structure (name/hosts/become/tasks), FQCN module addressing,
+#         free-form module arguments, reading the PLAY RECAP.
+# =============================================================================
+- name: Run basic commands
+  hosts: local            # target = the [local] group of inventory/hosts
+  become: true            # run tasks as root (sudo prompts if a password is set)
+
+  tasks:
+    # Each task = a NAME (for humans) + ONE module (the actual work).
+    # 'ansible.builtin.' is the FQCN (fully qualified collection name) of the
+    # module bundled with ansible-core - always prefer FQCN over short names
+    # so nothing can hijack the name via a third-party collection.
+    - name: Show current date
+      ansible.builtin.command: date      # free-form args: program + arguments
+
+    - name: Show current user
+      ansible.builtin.command: whoami
+
+    - name: Show hostname
+      ansible.builtin.command: hostname

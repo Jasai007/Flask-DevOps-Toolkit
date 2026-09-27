@@ -1,0 +1,12 @@
+---
+# =============================================================================
+# inventory/group_vars/webservers.yml - variables for the [webservers] group
+# -----------------------------------------------------------------------------
+# SCOPE: ONLY hosts listed under [webservers] in inventory/hosts. The group
+# is commented out by default, so this file is dormant until you enable the
+# remote examples (see inventory/hosts) - then web1/web2 inherit web_service.
+#
+# PATTERN: one file per group keeps tier-specific settings (ports, service
+# names, upstream URLs) out of the playbooks themselves.
+# =============================================================================
+web_service: nginx

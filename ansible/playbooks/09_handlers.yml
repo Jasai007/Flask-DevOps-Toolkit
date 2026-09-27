@@ -1,0 +1,42 @@
+---
+# =============================================================================
+# Playbook 09: HANDLERS - react to changes, exactly once
+# -----------------------------------------------------------------------------
+# WHY:  If three tasks all change nginx config, a naive playbook would restart
+#       nginx three times. Handlers collapse that into ONE restart, run only
+#       when something actually changed, AFTER all tasks finished.
+#
+# RUN:  ansible-playbook playbooks/09_handlers.yml     # first run: handler fires
+#       ansible-playbook playbooks/09_handlers.yml     # second: changed=0, NO restart
+#
+# THE FLOW (memorise this picture):
+#   copy task detects a difference
+#        │  notify: Restart nginx
+#        ▼
+#   handler queued (still not run yet)
+#        │  ...all other tasks finish...
+#        ▼
+#   handler executes ONCE, in the ORDER defined under handlers:
+#
+# LEARNS: notify, handler ordering, once-per-play semantics, the link to
+#         playbook 04 (state) vs event-driven restarts (here).
+# =============================================================================
+- name: Work with handlers
+  hosts: local
+  become: true
+  tasks:
+    - name: Update nginx web page
+      ansible.builtin.copy:
+        src: ../files/index.html          # project file (playbook-relative)
+        dest: /var/www/html/index.html    # the web server's document root
+        mode: '0644'
+      notify: Restart nginx               # NAME must match a handler exactly
+
+  handlers:
+    # Handlers are ordinary tasks with two special properties:
+    #   1. they run ONLY when notified by a changed task
+    #   2. they run at most ONCE per play, after all regular tasks
+    - name: Restart nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted

@@ -1,0 +1,35 @@
+---
+# =============================================================================
+# galaxy.yml - BUILD/PUBLISH metadata for the collection (not runtime config)
+# -----------------------------------------------------------------------------
+# This file exists so `ansible-galaxy collection build` can produce a
+# distributable tarball. Runtime behaviour lives in meta/runtime.yml and
+# plugins/.
+#
+# BUILD + INSTALL (see scripts/galaxy.sh build):
+#   ansible-galaxy collection build            # -> local-demo-1.0.0.tar.gz
+#   ansible-galaxy collection install local-demo-1.0.0.tar.gz -p ./collections
+#
+# NAMING: the tarball is <namespace>-<name>-<version>.tar.gz and the FQCN of
+# everything inside is local.demo.<thing>.
+# =============================================================================
+namespace: local          # our own private namespace (never published)
+name: demo                # collection name -> FQCN prefix: local.demo.*
+version: 1.0.0            # semantic versioning: MAJOR.MINOR.PATCH
+readme: README.md
+authors:
+  - Ansible Hands-On Project
+description: >-
+  Practice collection for this project: a custom host_summary module and a
+  human_size filter, fully commented as learning material.
+license:
+  - MIT
+tags: [demo, learning, practice]
+
+# Other collections THIS one needs at runtime (none - stdlib only):
+dependencies: {}
+
+# Keep these out of the built tarball:
+build_ignore:
+  - "*.tar.gz"
+  - ".git/"

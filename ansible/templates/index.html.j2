@@ -1,0 +1,18 @@
+{#
+  templates/index.html.j2 - shared Jinja2 template.
+  Used by playbooks/10_template.yml and playbooks/11_complete_webserver.yml.
+  Rendered ON THE CONTROL NODE with the play's vars (app_name, app_port),
+  then transferred only if the rendered result differs.
+  Jinja comments {# ... #} never appear in the deployed output.
+  (roles/webserver ships its OWN copy of this template - roles keep their
+   assets self-contained; see docs/roles.md.)
+#}
+<!DOCTYPE html>
+<html>
+<head><title>{{ app_name }}</title></head>
+<body>
+<h1>Welcome to {{ app_name }}</h1>
+<p>Running on port {{ app_port }}</p>
+<p>Managed by Ansible.</p>
+</body>
+</html>

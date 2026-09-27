@@ -1,0 +1,13 @@
+---
+# =============================================================================
+# roles/common/vars/Debian.yml - variables for ansible_os_family == "Debian"
+# (covers Debian AND Ubuntu - they share the same package tooling: apt)
+# Loaded automatically by tasks/main.yml using the first_found lookup.
+# NOTE: values in vars/ have HIGH priority (they beat inventory group_vars).
+#       That is why only OS facts live here - user preferences belong in
+#       defaults/main.yml where they stay overridable.
+# =============================================================================
+common_packages:
+  - curl
+  - vim
+  - htop

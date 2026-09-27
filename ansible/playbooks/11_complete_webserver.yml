@@ -1,0 +1,60 @@
+---
+# =============================================================================
+# Playbook 11: COMPLETE WEB SERVER - everything from 01-10 in one realistic play
+# -----------------------------------------------------------------------------
+# WHY:  This is the shape of real automation: install -> user -> configure ->
+#       ensure running, with an event-driven restart at the end. It is also
+#       exactly what roles/webserver now encapsulates - compare the two and
+#       you will understand WHY roles exist (docs/roles.md).
+#
+# RUN:  ansible-playbook playbooks/11_complete_webserver.yml
+#       ansible-playbook --check --diff playbooks/11_complete_webserver.yml
+#       ansible-playbook --list-tasks playbooks/11_complete_webserver.yml
+#       ansible-playbook playbooks/11_complete_webserver.yml --start-at-task 'Deploy website'
+#
+# ORDER MATTERS:  package first (nginx must exist to be started), template
+# before service (content in place before traffic flows), handler LAST.
+#
+# LEARNS: task ordering, composition of prior lessons, notify -> handler,
+#         idempotent full-stack runs (second run = changed=0 everywhere).
+# =============================================================================
+- name: Configure web server
+  hosts: local
+  become: true
+  vars:
+    app_name: Ansible Demo Application   # rendered into templates/index.html.j2
+    app_port: 8080
+  tasks:
+    # 1) foundation: the web server package (playbook 03)
+    - name: Install nginx
+      ansible.builtin.package:
+        name: nginx
+        state: present
+
+    # 2) identity: the account the application runs as (playbook 02)
+    - name: Create application user
+      ansible.builtin.user:
+        name: appuser
+        state: present
+
+    # 3) content: rendered per-host page (playbook 10) -> may change (09)
+    - name: Deploy website
+      ansible.builtin.template:
+        src: ../templates/index.html.j2
+        dest: /var/www/html/index.html
+        mode: '0644'
+      notify: Restart nginx              # restart ONLY if content changed
+
+    # 4) guarantee: running now AND after reboot (playbook 04)
+    - name: Make sure nginx is running
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true
+
+  handlers:
+    # Queued by step 3, executed once at the end of the play:
+    - name: Restart nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted

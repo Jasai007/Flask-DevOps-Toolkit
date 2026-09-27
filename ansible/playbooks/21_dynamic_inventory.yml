@@ -1,0 +1,54 @@
+---
+# =============================================================================
+# Playbook 21: DYNAMIC INVENTORY - consume hosts generated at runtime
+# -----------------------------------------------------------------------------
+# PREREQUISITE: pass the dynamic source with -i (the default inventory in
+# ansible.cfg is the STATIC file, which has no webservers/dbservers).
+#
+# RUN:  source scripts/env.sh
+#       ansible-inventory -i inventory/dynamic/inventory.py --graph
+#       ansible-playbook -i inventory/dynamic/inventory.py \
+#            playbooks/21_dynamic_inventory.yml
+#       ansible-playbook -i inventory/dynamic/inventory.py \
+#            playbooks/21_dynamic_inventory.yml --list-hosts   # fleet preview
+#       ansible-playbook -i inventory/dynamic/inventory.py \
+#            playbooks/21_dynamic_inventory.yml --limit dbservers
+#
+# WHAT TO OBSERVE:
+#   * variables inventory_source / managed_by come from hosts.json
+#     (common_vars) - they do NOT exist under the static inventory.
+#   * groups webservers / dbservers / all_servers exist ONLY dynamically.
+#   * running WITHOUT -i still works but those vars are missing - the
+#     default() filters below make that visible instead of fatal.
+#
+# LEARNS: -i with a script inventory, dynamic groups/vars, refresh_inventory.
+# =============================================================================
+- name: Work with a dynamic inventory
+  hosts: local            # group 'local' contains localhost (always safe)
+  gather_facts: false
+
+  tasks:
+    - name: Show which inventory supplied our variables
+      ansible.builtin.debug:
+        msg:
+          source: "{{ inventory_source | default('STATIC inventory (no -i given)') }}"
+          managed_by: "{{ managed_by | default('n/a') }}"
+          environment: "{{ environment | default('n/a') }}"
+
+    - name: Re-read the inventory WHILE the play runs
+      ansible.builtin.meta: refresh_inventory
+      # meta: refresh_inventory re-invokes the inventory source mid-play.
+      # Used by long-running plays whose fleet changes underneath them
+      # (autoscaling). Nothing changes here because our source is static JSON,
+      # but the syntax is the same for cloud plugins.
+
+    - name: Confirm the refreshed inventory still knows us
+      ansible.builtin.debug:
+        msg: "After refresh: groups = {{ groups.keys() | list | sort }}"
+
+    # ---------------------------------------------------------------------
+    # Inspecting the DYNAMIC fleet without connecting to it (safe):
+    #   ansible-playbook -i inventory/dynamic/inventory.py \
+    #       playbooks/21_dynamic_inventory.yml --list-hosts
+    #   ansible-inventory -i inventory/dynamic/inventory.py --graph
+    # ---------------------------------------------------------------------

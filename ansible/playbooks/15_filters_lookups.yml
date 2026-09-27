@@ -1,0 +1,81 @@
+---
+# =============================================================================
+# Playbook 15: FILTERS & LOOKUPS - transform data vs. fetch data from outside
+# -----------------------------------------------------------------------------
+# FILTER vs LOOKUP (the #1 confusion - memorise this):
+#   filter   = Jinja pipe on the RIGHT of '|'  -> TRANSFORMS a value you have
+#              example:  {{ app_name | upper }}
+#   lookup   = runs INSIDE {{ }}               -> FETCHES a value from outside
+#              (file, env, vault, password, dns...) - executes on the CONTROL
+#              node while the playbook is being parsed.
+#
+# RUN:  ansible-playbook playbooks/15_filters_lookups.yml
+#       ansible-playbook playbooks/15_filters_lookups.yml -e app_port=9090
+#
+# LEARNS: default, ternary, upper, length, int, join, selectattr/map,
+#         to_json, lookup('env'), lookup('file'), query() vs lookup().
+# =============================================================================
+- name: Work with filters and lookups
+  hosts: local
+  vars:
+    app_name: ansible-demo
+    app_port: 8080
+    # NOTE: app_debug is deliberately NOT defined - the 'default' filter
+    # below supplies a fallback so the play never crashes on it.
+    features:
+      - name: healthcheck
+        enabled: true
+      - name: metrics
+        enabled: false
+      - name: caching
+        enabled: true
+
+  tasks:
+    # ---------------------------------------------------------------------
+    # FILTERS - transform values you already have
+    # ---------------------------------------------------------------------
+    - name: Everyday string / number / default filters
+      ansible.builtin.debug:
+        msg:
+          upper: "{{ app_name | upper }}"                      # ANSIBLE-DEMO
+          default_demo: "{{ app_debug | default('unset') }}"   # never undefined
+          port_plus_one: "{{ app_port | int + 1 }}"            # 8081
+          name_length: "{{ app_name | length }}"               # 12
+
+    - name: ternary - the inline if/else filter
+      ansible.builtin.debug:
+        # ternary(true_value, false_value[, none_value])
+        msg: "app_port is {{ app_port | ternary('configured', 'missing') }}"
+
+    - name: Chain filters - only the ENABLED feature names
+      ansible.builtin.debug:
+        # selectattr keeps items where 'enabled' is truthy,
+        # map extracts the 'name' of each, join glues them together.
+        msg: >-
+          {{ features | selectattr('enabled') | map(attribute='name')
+             | list | join(', ') }}
+
+    - name: to_json - serialise a whole structure
+      ansible.builtin.debug:
+        msg: "{{ features | to_json }}"
+
+    # ---------------------------------------------------------------------
+    # LOOKUPS - fetch values from OUTSIDE the playbook (control node side)
+    # ---------------------------------------------------------------------
+    - name: lookup('env') - read an environment variable
+      ansible.builtin.debug:
+        msg: "USER={{ lookup('env', 'USER') }}  HOME={{ lookup('env', 'HOME') }}"
+
+    - name: lookup('file') - read a file from the control node at parse time
+      ansible.builtin.debug:
+        # Relative path resolves against this playbook's directory.
+        msg: >-
+          files/sample.txt says:
+          {{ lookup('file', '../files/sample.txt') | trim }}
+
+    - name: query() vs lookup() - query always returns a LIST
+      ansible.builtin.debug:
+        # For single-value lookups both work; query() is the modern form
+        # and is what you need when a lookup can return several items
+        # (e.g. query('dict', some_dict), query('url', ...)).
+        msg: "query('env', 'USER') -> {{ query('env', 'USER') }}"

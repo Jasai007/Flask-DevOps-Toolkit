@@ -1,0 +1,35 @@
+---
+# =============================================================================
+# site.yml - THE ENTRY POINT of this project ("apply everything")
+# -----------------------------------------------------------------------------
+# WHY: as automation grows, you stop running individual playbooks and run ONE
+#      composition file. This is what CI pipelines, cron jobs and
+#      `ansible-pull` invoke - humans rarely type long commands anymore.
+#
+# RUN:  source scripts/env.sh
+#       ansible-playbook site.yml                       # apply everything
+#       ansible-playbook site.yml --tags validate       # fast sanity only
+#       ansible-playbook site.yml --limit localhost     # one host of many
+#       ansible-playbook site.yml --check --diff        # dry run + diff
+#       ansible-playbook site.yml --list-hosts          # who is targeted
+#
+# COMPOSITION RULES:
+#   * import_playbook stitches whole playbook FILES together, in order.
+#   * Each imported file keeps its own plays/tags - pass --tags/--limit
+#     exactly as if it were one giant playbook.
+#   * Add new tiers by adding a play file (playbooks/db_tier.yml) and one
+#     import line here - never grow site.yml itself into a monster.
+#
+# LEARNS: import_playbook, play ordering, tags + limit as the daily driver.
+# =============================================================================
+# 1) FAST checks first - if the environment is broken, fail before touching
+#    anything. (playbooks/22_selftest.yml needs no root privileges.)
+- import_playbook: playbooks/22_selftest.yml
+
+# 2) Then apply the stack: baseline (common) + web tier (webserver).
+#    Both roles are declared inside playbooks/18_roles.yml.
+- import_playbook: playbooks/18_roles.yml
+
+# 3) Further tiers would be appended here, e.g.:
+#    - import_playbook: playbooks/23_database_tier.yml
+#    - import_playbook: playbooks/24_monitoring.yml

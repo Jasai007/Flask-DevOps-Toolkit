@@ -1,0 +1,66 @@
+---
+# =============================================================================
+# Playbook 19: import_role vs include_role - STATIC vs DYNAMIC role usage
+# -----------------------------------------------------------------------------
+# import_role  = STATIC: parsed at playbook LOAD time.
+#                  * like a copy-paste of the role's tasks into this play
+#                  * tags/when on it apply to every imported task
+#                  * CANNOT be used inside loops or with run-time-only data
+# include_role  = DYNAMIC: resolved at RUN time.
+#                  * executes like a normal task - can be looped, skipped
+#                    with when, registered, and given vars just for itself
+#                  * tags land on the include task itself unless you also
+#                    use the 'apply:' keyword (shown below)
+#
+# RUN:  ansible-playbook playbooks/19_dynamic_roles.yml
+#       ansible-playbook playbooks/19_dynamic_roles.yml -e deploy_webserver=false
+#       ansible-playbook playbooks/19_dynamic_roles.yml --list-tasks
+#       ansible-playbook playbooks/19_dynamic_roles.yml -v
+#
+# LEARNS: import_role, include_role, conditional role application,
+#         looping over roles, apply: for tag propagation, public:.
+# =============================================================================
+- name: Demonstrate static and dynamic role usage
+  hosts: local
+  vars:
+    # Flip from the command line:  -e deploy_webserver=false
+    deploy_webserver: true
+
+  tasks:
+    # ---------------------------------------------------------------------
+    # STATIC - chosen at parse time, runs before any dynamic decision.
+    # The effect equals writing 'roles: [common]' at play level.
+    # ---------------------------------------------------------------------
+    - name: import_role - static, parsed before the play starts
+      ansible.builtin.import_role:
+        name: common
+
+    # ---------------------------------------------------------------------
+    # DYNAMIC - decided while the play runs, so 'when' behaves naturally
+    # and this block can carry its OWN vars (they do not leak to other tasks).
+    # ---------------------------------------------------------------------
+    - name: include_role - dynamic, decided at run time
+      ansible.builtin.include_role:
+        name: webserver
+        # 'apply' must be an OPTION of include_role (inside its mapping).
+        # Without it, tags would tag the INCLUDE TASK only, not the tasks
+        # inside the role - so --tags web would skip everything. apply fixes
+        # that by pushing these tags onto every included task:
+        apply:
+          tags: [web]
+      when: deploy_webserver | bool      # skip the whole role if false
+      vars:
+        app_name: "Included at runtime"  # scoped to this include only
+
+    # ---------------------------------------------------------------------
+    # include_role CAN be looped - import_role CANNOT. This is the single
+    # clearest difference between the two.
+    # ---------------------------------------------------------------------
+    - name: include_role can be used in a loop (import_role cannot)
+      ansible.builtin.include_role:
+        name: "{{ item }}"
+      loop:
+        - common          # idempotent - second application reports no change
+
+    # INFO: 'public: true' on include_role exposes the role's defaults/vars
+    # to the rest of the play (default is private - preferred, less leakage).

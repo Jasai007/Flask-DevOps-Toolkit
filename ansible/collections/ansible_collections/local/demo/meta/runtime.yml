@@ -1,0 +1,15 @@
+---
+# =============================================================================
+# meta/runtime.yml - RUNTIME behaviour of this collection (used by ansible-core)
+# -----------------------------------------------------------------------------
+# While galaxy.yml is only read at BUILD time, this file is read EVERY time
+# ansible runs something from this collection.
+# =============================================================================
+# Minimum ansible-core version that may load this collection. Older cores
+# refuse with a clear error instead of failing mysteriously.
+requires_ansible: ">=2.14"
+
+# (Optional, not needed here - examples for larger collections:)
+#   action_groups:      group short-collections of module aliases
+#   module_routing:     redirect/deplicate individual modules
+#   plugin_routing:     routing for filters/lookups/etc + deprecation notices

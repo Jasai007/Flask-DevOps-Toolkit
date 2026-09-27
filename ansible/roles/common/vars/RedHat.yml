@@ -1,0 +1,10 @@
+---
+# =============================================================================
+# roles/common/vars/RedHat.yml - variables for ansible_os_family == "RedHat"
+# (covers RHEL, CentOS, Rocky, AlmaLinux, Fedora - package tooling: dnf/yum)
+# Loaded automatically by tasks/main.yml using the first_found lookup.
+# =============================================================================
+common_packages:
+  - curl
+  - vim
+  - htop

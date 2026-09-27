@@ -1,0 +1,27 @@
+# =============================================================================
+# .ansible-lint - Ansible playbook linting rules for this project
+# =============================================================================
+# Run:  ansible-lint            (auto-discovers this file from project root)
+# Install: pipx install ansible-lint   (recommended)
+#          pip3 install --user ansible-lint   (see docs/00-first-steps.md)
+# Profiles: safety > production > standard > basic > min (strictness levels)
+# =============================================================================
+profile: basic            # community baseline - good for learning projects
+
+offline: true             # do not contact galaxy.ansible.com while linting,
+                          # so linting works without network access
+
+exclude_paths:
+  - .kilo/                # agent worktree copies - not part of the project
+  - vault/                # ansible-vault encrypted demo file
+  - .github/              # CI workflow file (linted by actionlint instead)
+
+# Rules disabled ON PURPOSE - this project teaches these constructs:
+skip_list:
+  - no-changed-when             # playbooks 01/14 run bare commands as lessons
+  - command-instead-of-module   # ditto: command module is the topic there
+  - yaml[line-length]           # line length is owned by .yamllint.yml
+
+# Rules that should WARN (show up, but do not fail the run):
+warn_list:
+  - risky-octal               # teaches mode: '0644' as string, warn only

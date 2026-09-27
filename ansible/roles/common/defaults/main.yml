@@ -1,0 +1,22 @@
+---
+# =============================================================================
+# roles/common/defaults/main.yml - WEAKEST variable priority
+# -----------------------------------------------------------------------------
+# Variable priority (highest wins):
+#   -e extra vars  >  task vars  >  role vars/main.yml  >  play vars
+#   >  inventory group_vars/host_vars  >  ROLE DEFAULTS (this file)
+# Defaults are deliberately weak so ANY play, inventory or CLI flag can
+# override them without editing the role. That is what makes roles reusable.
+# =============================================================================
+
+# User/group the application runs as (created by tasks/main.yml).
+app_user: appuser
+app_group: appuser
+
+# Base directory for application files (created with owner app_user).
+app_base_dir: /opt/demoapp
+
+# Extra baseline packages for EVERY OS. OS-specific packages live in
+# vars/Debian.yml / vars/RedHat.yml and are loaded automatically.
+# Override per play:  -e "common_packages_extra=[rsync,git]"
+common_packages_extra: []
